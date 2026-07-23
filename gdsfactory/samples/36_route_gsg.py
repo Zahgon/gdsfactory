@@ -1,4 +1,3 @@
-"""Sample GS routing."""
 
 from __future__ import annotations
 
@@ -36,9 +35,6 @@ if __name__ == "__main__":
         cross_section=x,
         port_type="electrical",
         raise_on_error=True,
-        # bend='bend_circular',
-        # bend='wire_corner'
         bend="wire_corner45",
-        # bend='wire_corner_sections'
     )
     c2.show()

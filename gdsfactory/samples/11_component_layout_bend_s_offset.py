@@ -1,4 +1,3 @@
-"""Lets try the bend_s_offset with different p parameters and see how the layout changes."""
 
 import gdsfactory as gf
 

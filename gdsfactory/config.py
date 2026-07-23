@@ -1,4 +1,3 @@
-"""Gdsfactory configuration."""
 
 from __future__ import annotations
 
@@ -90,19 +89,7 @@ def print_version_plugins(packages: list[str] | None = None) -> None:
 
 
 def print_version_plugins_raw() -> None:
-    """Print gdsfactory plugin versions and paths."""
-    print("python", sys.version)
-    print("gdsfactory", __version__)
-
-    for plugin in plugins:
-        try:
-            m = importlib.import_module(plugin)
-            try:
-                print(plugin, m.__version__)
-            except AttributeError:
-                print(plugin)
-        except ImportError:
-            print(plugin, "not installed", "")
+    pass
 
 
 class Config(Settings):
@@ -198,7 +185,4 @@ valid_port_orientations = {0, 90, 180, -90, 270}
 
 
 def rich_output() -> None:
-    """Enables rich output."""
-    from rich import pretty
-
-    pretty.install()
+    pass

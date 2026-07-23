@@ -11,16 +11,4 @@ def gdsdiff_git(
     new_hex: str = "",
     new_mode: str = "",
 ) -> None:
-    """Show diffs for two files when running git diff.
-
-    Args:
-        path: script to run path.
-        curr_file: current GDS file.
-        old_file: old GDS.
-        old_hex: ignore.
-        old_mode: ignore.
-        new_file: new GDS file.
-        new_hex: ignore.
-        new_mode: ignore.
-    """
-    diff(old_file, curr_file, xor=True)
+    pass

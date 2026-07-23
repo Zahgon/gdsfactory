@@ -1,4 +1,3 @@
-"""Add ports from pin markers or labels."""
 
 from __future__ import annotations
 
@@ -79,8 +78,6 @@ def _infer_port_direction(
         (270.0, dx, pymin - dymin),  # South
     ]
 
-    # Pin flush with exactly one component boundary: port faces outward from it.
-    # Aspect ratio cannot decide here, pins can align long or short side.
     flush = [b for b in boundaries if abs(b[2]) < tol]
     if len(flush) == 1:
         orientation, width, _ = flush[0]
@@ -89,18 +86,15 @@ def _infer_port_direction(
     is_horizontal = (dy < dx) if ports_on_short_side else (dx < dy)
     is_vertical = (dy > dx) if ports_on_short_side else (dx > dy)
 
-    # Rectangular ports
     if is_horizontal:
         return (0.0 if x > xc else 180.0), dy, x, y
     if is_vertical:
         return (90.0 if y > yc else 270.0), dx, x, y
 
-    # Square ports near multiple boundaries: first flush boundary wins
     for orientation, width, distance in boundaries:
         if abs(distance) < tol:
             return orientation, width, x, y
 
-    # Fallback: use center comparison
     return (0.0 if pxmax > xc else 180.0), dy, x, y
 
 
@@ -119,7 +113,6 @@ def _apply_inside_position(
     if not inside:
         return x, y
 
-    # Map to: (modifies_x_axis, default_value, opposite_value)
     port_mapping = {
         0.0: (True, pxmax, pxmin),  # East adjusts X
         180.0: (True, pxmin, pxmax),  # West adjusts X
@@ -127,7 +120,6 @@ def _apply_inside_position(
         270.0: (False, pymin, pymax),  # South adjusts Y
     }
 
-    # Fallback for non-Manhattan orientation
     if orientation not in port_mapping:
         return x, y
 
@@ -155,60 +147,7 @@ def _auto_detect_port_layer(
     default_layer_idx: int,
     pin_layer: int,
 ) -> int:
-    """Detect the actual port layer from adjacent component geometry.
-
-    When the specified port_layer has no geometry at the port position,
-    find the layer with a matching-width edge at the port position.
-
-    Args:
-        component: the component to search.
-        x: port center x in um.
-        y: port center y in um.
-        width: port width in um.
-        dbu: database unit.
-        default_layer_idx: default layer index to return.
-        pin_layer: pin layer index to exclude from search.
-
-    Returns:
-        The detected layer index, or default_layer_idx if no match found.
-    """
-    _tol = 0.001
-    _marker_box = gf.kdb.DBox(x - _tol, y - _tol, x + _tol, y + _tol)
-    _marker_region = gf.kdb.Region(gf.kdb.DPolygon(_marker_box).to_itype(dbu))
-
-    _layer_indexes = list(component.kcl.layer_indexes())
-
-    # Check if default layer already has geometry at this position
-    if default_layer_idx in _layer_indexes:
-        _region = gf.kdb.Region(component.begin_shapes_rec(default_layer_idx))
-        if not _region.edges().interacting(_marker_region).is_empty():
-            return default_layer_idx
-
-    # Search other layers for a matching-width edge
-    _best_idx = None
-    _best_area = float("inf")
-    for _li in _layer_indexes:
-        if _li in (default_layer_idx, pin_layer):
-            continue
-        _region = gf.kdb.Region(component.begin_shapes_rec(_li))
-        _edges = _region.edges().interacting(_marker_region)
-        if _edges.is_empty():
-            continue
-        _width_match = any(
-            np.isclose(e.length() * dbu, width, atol=0.1) for e in _edges.each()
-        )
-        if not _width_match:
-            continue
-        # Prefer the layer with the smallest polygon at port position
-        _polys = _region.interacting(_marker_region)
-        for _p in _polys.each():
-            _area = abs(_p.area()) * dbu * dbu
-            if _area < _best_area:
-                _best_area = _area
-                _best_idx = _li
-            break
-
-    return _best_idx if _best_idx is not None else default_layer_idx
+    pass
 
 
 def _register_ports(
@@ -258,49 +197,7 @@ def add_ports_from_markers_square(
     port_name_prefix: str | None = None,
     port_type: str = "optical",
 ) -> Component:
-    """Add ports from square markers at the port center in port_layer.
-
-    Args:
-        component: to read polygons from and to write ports to.
-        pin_layer: for port markers.
-        port_layer: for the new created port.
-        orientation: in degrees 90 north, 0 east, 180 west, 270 south.
-        min_pin_area_um2: ignores pins with area smaller than min_pin_area_um2.
-        max_pin_area_um2: ignore pins for area above certain size.
-        pin_extra_width: 2*offset from pin to straight.
-        port_names: names of the ports (defaults to {i}).
-        port_name_prefix: defaults to 'o' for optical and 'e' for electrical.
-        port_type: optical, electrical.
-    """
-    port_name_prefix_default = "o" if port_type == "optical" else "e"
-    port_name_prefix = port_name_prefix or port_name_prefix_default
-    port_markers = read_port_markers(component, (pin_layer,))
-    port_names = list(
-        port_names
-        or [f"{port_name_prefix}{i + 1}" for i in range(len(port_markers.polygons))]
-    )
-    layer = port_layer or pin_layer
-
-    for port_name, p in zip(port_names, port_markers.polygons, strict=False):
-        (xmin, ymin), (xmax, ymax) = p.bounding_box()
-        x, y = np.sum(p.bounding_box(), 0) / 2
-
-        dy = snap_to_grid(ymax - ymin)
-        dx = snap_to_grid(xmax - xmin)
-        width = dx - pin_extra_width
-
-        # Snap to the nearest 2 nm (0.002 µm)
-        width = np.round((width - pin_extra_width) / 0.002) * 0.002
-
-        if dx == dy and max_pin_area_um2 > dx * dy > min_pin_area_um2:
-            component.add_port(
-                port_name,
-                center=(x, y),
-                width=width,
-                orientation=orientation,
-                layer=layer,
-            )
-    return component
+    pass
 
 
 def add_ports_from_markers_center(
@@ -322,177 +219,7 @@ def add_ports_from_markers_center(
     auto_detect_port_layer: bool = False,
     debug: bool = False,
 ) -> Component:
-    """Add ports from pins guessing port orientation from component boundary.
-
-    Args:
-        component: to read polygons from and to write ports to.
-        pin_layer: layer for pin maker.
-        port_layer: for the new created port. Defaults to pin_layer.
-        inside: True-> markers  inside. False-> markers at center.
-        tol: tolerance area to search ports at component boundaries dxmin, dymin, dxmax, dxmax.
-        pin_extra_width: 2*offset from pin to straight.
-        min_pin_area_um2: ignores pins with area smaller than min_pin_area_um2.
-        max_pin_area_um2: ignore pins for area above certain size.
-        skip_square_ports: skips square ports (hard to guess orientation).
-        xcenter: for guessing orientation of rectangular ports.
-        ycenter: for guessing orientation of rectangular ports.
-        port_name_prefix: defaults to 'o' for optical and 'e' for electrical ports.
-        port_type: type of port (optical, electrical ...).
-        ports_on_short_side: if the port is on the short side rather than the long side.
-        auto_rename_ports: if True auto rename ports to avoid duplicates.
-        auto_detect_port_layer: if True, detect the actual port layer from adjacent
-            component geometry when port_layer has no geometry at the port position.
-        debug: if True prints ports that are skipped.
-
-    ```text
-    For inside=False the port location is at the middle of the PIN
-           _______________
-          |               |
-          |               |
-         |||             |||____  | pin_extra_width/2 > 0
-         |||             |||
-         |||             |||____
-         |||             |||
-          |      __       |
-          |_____|__|______|
-                |__|
-    ```
-
-    ```text
-    For inside=True all the pin is inside the port
-           _______________
-          |               |
-          |               |
-          |_              |
-          | |             |
-          |_|             |
-          |               |
-          |      __       |
-          |_____|__|______|
-    ```
-
-    dx < dy: port is east or west
-        dx > xc: east
-        dx < xc: west
-
-    dx > dy: port is north or south
-        dy > yc: north
-        dy < yc: south
-
-    dx = dy
-        dx > xc: east
-        dx < xc: west
-    """
-    from gdsfactory.pdk import get_layer
-
-    xc = xcenter or component.x
-    yc = ycenter or component.y
-    dxmax = component.xmax
-    dxmin = component.xmin
-    dymax = component.ymax
-    dymin = component.ymin
-    dbu = float(component.kcl.dbu)
-
-    layer = port_layer or pin_layer
-    port_locations: list[tuple[float, float]] = []
-
-    port_name_prefix_default = "o" if port_type == "optical" else "e"
-    port_name_prefix = port_name_prefix or port_name_prefix_default
-
-    pin_layer = gf.get_layer(pin_layer)
-
-    polygons = component.get_polygons(by="index")
-    if pin_layer not in polygons:
-        warnings.warn(
-            f"no pin layer {pin_layer} found in {component.layers}", stacklevel=3
-        )
-        return component
-
-    port_markers = polygons[pin_layer]
-    ports: list[Port] = []
-
-    for i, p in enumerate(port_markers):
-        port_name = f"{port_name_prefix}{i + 1}" if port_name_prefix else str(i)
-        bbox = p.bbox()
-        pxmin, pymin, pxmax, pymax = map(
-            float, (bbox.left, bbox.bottom, bbox.right, bbox.top)
-        )
-
-        x = (pxmax + pxmin) / 2
-        y = (pymin + pymax) / 2
-        dy = abs(pymax - pymin)
-        dx = abs(pxmax - pxmin)
-        dx *= dbu
-        dy *= dbu
-        x *= dbu
-        y *= dbu
-        pxmax *= dbu
-        pymax *= dbu
-        pxmin *= dbu
-        pymin *= dbu
-
-        if _should_skip_marker(
-            dx, dy, min_pin_area_um2, max_pin_area_um2, skip_square_ports, debug
-        ):
-            continue
-
-        orientation, width, x, y = _infer_port_direction(
-            x,
-            y,
-            dx,
-            dy,
-            pxmin,
-            pymin,
-            pxmax,
-            pymax,
-            xc,
-            yc,
-            dxmin,
-            dymin,
-            dxmax,
-            dymax,
-            tol,
-            ports_on_short_side,
-        )
-        x, y = _apply_inside_position(
-            orientation,
-            x,
-            y,
-            pxmin,
-            pymin,
-            pxmax,
-            pymax,
-            inside,
-        )
-        # Note: pin_extra_width is subtracted twice, matching original behavior.
-        width = _snap_port_width(width - pin_extra_width, pin_extra_width)
-
-        _port_layer_idx = get_layer(layer)
-        if auto_detect_port_layer:
-            _port_layer_idx = _auto_detect_port_layer(
-                component,
-                x,
-                y,
-                width,
-                dbu,
-                _port_layer_idx,
-                pin_layer,
-            )
-
-        if (x, y) not in port_locations:
-            port_locations.append((x, y))
-            ports.append(
-                Port(
-                    name=port_name,
-                    center=(x, y),
-                    width=width,
-                    orientation=orientation,
-                    layer=_port_layer_idx,
-                    port_type=port_type,
-                )
-            )
-
-    return _register_ports(component, ports, auto_rename_ports)
+    pass
 
 
 def add_ports_from_boxes(
@@ -514,144 +241,7 @@ def add_ports_from_boxes(
     auto_rename_ports: bool = True,
     debug: bool = False,
 ) -> Component:
-    """Add ports from pins guessing port orientation from component boundary.
-
-    Args:
-        component: to read polygons from and to write ports to.
-        pin_layer: layer for pin maker.
-        port_layer: for the new created port. Defaults to pin_layer.
-        inside: True-> markers  inside. False-> markers at center.
-        use_opposite_side: if True and inside=True, place port at opposite edge of pin.
-        tol: tolerance area to search ports at component boundaries dxmin, dymin, dxmax, dxmax.
-        pin_extra_width: 2*offset from pin to straight.
-        min_pin_area_um2: ignores pins with area smaller than min_pin_area_um2.
-        max_pin_area_um2: ignore pins for area above certain size.
-        skip_square_ports: skips square ports (hard to guess orientation).
-        xcenter: for guessing orientation of rectangular ports.
-        ycenter: for guessing orientation of rectangular ports.
-        port_name_prefix: defaults to 'o' for optical and 'e' for electrical ports.
-        port_type: type of port (optical, electrical ...).
-        ports_on_short_side: if the port is on the short side rather than the long side.
-        auto_rename_ports: if True auto rename ports to avoid duplicates.
-        debug: if True prints ports that are skipped.
-
-    ```text
-    For inside=False the port location is at the middle of the PIN
-           _______________
-          |               |
-          |               |
-         |||             |||____  | pin_extra_width/2 > 0
-         |||             |||
-         |||             |||____
-         |||             |||
-          |      __       |
-          |_____|__|______|
-                |__|
-    ```
-
-    ```text
-    For inside=True all the pin is inside the port
-           _______________
-          |               |
-          |               |
-          |_              |
-          | |             |
-          |_|             |
-          |               |
-          |      __       |
-          |_____|__|______|
-    ```
-
-    dx < dy: port is east or west
-        dx > xc: east
-        dx < xc: west
-
-    dx > dy: port is north or south
-        dy > yc: north
-        dy < yc: south
-
-    dx = dy
-        dx > xc: east
-        dx < xc: west
-    """
-    xc = xcenter or component.x
-    yc = ycenter or component.y
-    dxmax = component.xmax
-    dxmin = component.xmin
-    dymax = component.ymax
-    dymin = component.ymin
-
-    layer = port_layer or pin_layer
-    port_locations: list[tuple[float, float]] = []
-
-    ports: list[Port] = []
-    port_name_prefix_default = "o" if port_type == "optical" else "e"
-    port_name_prefix = port_name_prefix or port_name_prefix_default
-
-    pin_layer = gf.get_layer(pin_layer)
-    layer = gf.get_layer(layer)
-
-    port_markers = component.get_boxes(layer=pin_layer)
-    for i, p in enumerate(port_markers):
-        port_name = f"{port_name_prefix}{i + 1}" if port_name_prefix else str(i)
-        bbox = p.bbox()
-        pxmin, pymin, pxmax, pymax = bbox.left, bbox.bottom, bbox.right, bbox.top
-
-        x = (pxmax + pxmin) / 2
-        y = (pymin + pymax) / 2
-        dy = abs(pymax - pymin)
-        dx = abs(pxmax - pxmin)
-
-        if _should_skip_marker(
-            dx, dy, min_pin_area_um2, max_pin_area_um2, skip_square_ports, debug
-        ):
-            continue
-
-        orientation, width, x, y = _infer_port_direction(
-            x,
-            y,
-            dx,
-            dy,
-            pxmin,
-            pymin,
-            pxmax,
-            pymax,
-            xc,
-            yc,
-            dxmin,
-            dymin,
-            dxmax,
-            dymax,
-            tol,
-            ports_on_short_side,
-        )
-        x, y = _apply_inside_position(
-            orientation,
-            x,
-            y,
-            pxmin,
-            pymin,
-            pxmax,
-            pymax,
-            inside,
-            use_opposite_side,
-        )
-        width = _snap_port_width(width, pin_extra_width)
-
-        if (x, y) not in port_locations:
-            port_locations.append((x, y))
-            ports.append(
-                Port(
-                    name=port_name,
-                    center=(x, y),
-                    width=width,
-                    orientation=orientation,
-                    layer=layer,
-                    port_type=port_type,
-                )
-            )
-
-    return _register_ports(component, ports, auto_rename_ports, allow_none_names=True)
+    pass
 
 
 add_ports_from_markers_inside = partial(add_ports_from_markers_center, inside=True)

@@ -4,12 +4,6 @@ Layer = tuple[int, int]
 
 
 class LAYER(gf.LayerEnum):
-    """Generic layermap based on book.
-
-    Lukas Chrostowski, Michael Hochberg, "Silicon Photonics Design",
-    Cambridge University Press 2015, page 353
-    You will need to create a new LayerMap with your specific foundry layers.
-    """
 
     layout = gf.constant(gf.kcl.layout)
 

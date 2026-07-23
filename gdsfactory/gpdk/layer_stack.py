@@ -13,7 +13,6 @@ nm = 1e-3
 
 
 class LayerStackParameters:
-    """values used by get_layer_stack and get_process."""
 
     thickness_wg: float = 220 * nm
     thickness_slab_deep_etch: float = 90 * nm
@@ -273,139 +272,7 @@ WAFER_STACK = LayerStack(
 
 
 def get_process() -> tuple[ProcessStep, ...]:
-    """Returns generic process to generate LayerStack.
-
-    Represents processing steps that will result in the GenericLayerStack, starting from the waferstack LayerStack.
-
-    based on paper https://www.degruyter.com/document/doi/10.1515/nanoph-2013-0034/html
-    """
-    return (
-        Etch(
-            name="strip_etch",
-            layer=LAYER.WG,
-            layers_or=[LAYER.SLAB90],
-            depth=LayerStackParameters.thickness_wg
-            + 0.01,  # slight overetch for numerics
-            material="silicon",
-            resist_thickness=1.0,
-            positive_tone=False,
-        ),
-        Etch(
-            name="slab_etch",
-            layer=LAYER.SLAB90,
-            layers_diff=[LAYER.WG],
-            depth=LayerStackParameters.thickness_wg
-            - LayerStackParameters.thickness_slab_deep_etch,
-            material="silicon",
-            resist_thickness=1.0,
-        ),
-        # See gplugins.process.implant tables for ballpark numbers
-        # Adjust to your process
-        ImplantPhysical(
-            name="deep_n_implant",
-            layer=LAYER.N,
-            energy=100,
-            ion="P",
-            dose=1e12,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="shallow_n_implant",
-            layer=LAYER.N,
-            energy=50,
-            ion="P",
-            dose=1e12,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="deep_p_implant",
-            layer=LAYER.P,
-            energy=50,
-            ion="B",
-            dose=1e12,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="shallow_p_implant",
-            layer=LAYER.P,
-            energy=15,
-            ion="B",
-            dose=1e12,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="pp_implant",
-            layer=LAYER.PP,
-            energy=15,
-            ion="B",
-            dose=5e12,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="np_implant",
-            layer=LAYER.NP,
-            energy=50,
-            ion="P",
-            dose=5e12,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="ppp_implant",
-            layer=LAYER.PPP,
-            energy=15,
-            ion="B",
-            dose=1e15,
-            resist_thickness=1.0,
-        ),
-        ImplantPhysical(
-            name="npp_implant",
-            layer=LAYER.NPP,
-            energy=100,
-            ion="As",
-            dose=1e15,
-            resist_thickness=1.0,
-        ),
-        # "Temperatures of ~1000C for not more than a few seconds"
-        # Adjust to your process
-        # https://en.wikipedia.org/wiki/Rapid_thermal_processing
-        Anneal(
-            name="dopant_activation",
-            time=5,
-            temperature=1000,
-        ),
-        Grow(
-            name="viac_metallization",
-            layer=None,
-            thickness=LayerStackParameters.zmin_metal1
-            - LayerStackParameters.thickness_slab_deep_etch,
-            material="Aluminum",
-            type="anisotropic",
-        ),
-        Etch(
-            name="viac_etch",
-            layer=LAYER.VIAC,
-            depth=LayerStackParameters.zmin_metal1
-            - LayerStackParameters.thickness_slab_deep_etch
-            + 0.1,
-            material="Aluminum",
-            type="anisotropic",
-            resist_thickness=1.0,
-            positive_tone=False,
-        ),
-        Grow(
-            name="deposit_cladding",
-            layer=None,
-            thickness=LayerStackParameters.thickness_clad
-            + LayerStackParameters.thickness_slab_deep_etch,
-            material="Oxide",
-            type="anisotropic",
-        ),
-        Planarize(
-            name="planarization",
-            height=LayerStackParameters.thickness_clad
-            - LayerStackParameters.thickness_slab_deep_etch,
-        ),
-    )
+    pass
 
 
 if __name__ == "__main__":

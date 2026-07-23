@@ -15,19 +15,19 @@ from gdsfactory.typings import CrossSectionSpec, Ports
 
 
 def sort_key_west_to_east(port: typings.Port) -> float:
-    return port.x
+    pass
 
 
 def sort_key_east_to_west(port: typings.Port) -> float:
-    return -port.x
+    pass
 
 
 def sort_key_south_to_north(port: typings.Port) -> float:
-    return port.y
+    pass
 
 
 def sort_key_north_to_south(port: typings.Port) -> float:
-    return -port.y
+    pass
 
 
 def route_ports_to_side(
@@ -218,7 +218,6 @@ def route_ports_to_x(
     else:
         raise ValueError("x should be either to the east or to the west of all ports")
 
-    # forward_ports.sort()
     north_ports.sort(key=sort_key_north)
     south_ports.sort(key=sort_key_south)
     forward_ports.sort(key=sort_key_south_to_north)
@@ -285,7 +284,6 @@ def route_ports_to_x(
     min_x = min(xs)
 
     for p in backward_ports_thru_north:
-        # Extend new_ports if necessary
         if angle == 0 and p.x < max_x:
             start_straight_length_section = max_x - p.x
         elif angle == 180 and p.x > min_x:
@@ -305,7 +303,6 @@ def route_ports_to_x(
 
     start_straight_length_section = start_straight_length
     for p in backward_ports_thru_south:
-        # Extend new_ports if necessary
         if angle == 0 and p.x < max_x:
             start_straight_length_section = max_x - p.x
         elif angle == 180 and p.x > min_x:

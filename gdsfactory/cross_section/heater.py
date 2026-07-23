@@ -1,4 +1,3 @@
-"""Heater cross-section variants."""
 
 from __future__ import annotations
 

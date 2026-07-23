@@ -1,4 +1,3 @@
-"""Route bundle with tapers to wider widths for reduced propagation loss."""
 
 from __future__ import annotations
 

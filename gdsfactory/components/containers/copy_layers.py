@@ -16,22 +16,4 @@ def copy_layers(
     flatten: bool = False,
     **kwargs: Any,
 ) -> Component:
-    """Returns a component with the geometry copied in different layers.
-
-    Args:
-        factory: component spec.
-        layers: iterable of layers.
-        flatten: flatten the result.
-        kwargs: keyword arguments passed to the component.
-    """
-    c = Component()
-
-    ci = None
-    for layer in layers:
-        c << (ci := gf.get_component(factory, layer=layer, **kwargs))
-    if ci is not None:
-        c.copy_child_info(ci)
-
-    if flatten:
-        c.flatten()
-    return c
+    pass

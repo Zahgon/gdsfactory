@@ -1,4 +1,3 @@
-"""Route bundle electrical with enlarged bbox to force obstacle avoidance."""
 
 from __future__ import annotations
 

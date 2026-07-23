@@ -14,26 +14,6 @@ material_name_to_lumerical_default = {
 
 
 class SimulationSettingsLumericalFdtd(BaseModel):
-    """Lumerical FDTD simulation_settings.
-
-    Parameters:
-        background_material: for the background.
-        port_margin: on both sides of the port width (um).
-        port_height: port height (um).
-        port_extension: port extension (um).
-        mesh_accuracy: 2 (1: coarse, 2: fine, 3: superfine).
-        zmargin: for the FDTD region (um).
-        ymargin: for the FDTD region (um).
-        xmargin: for the FDTD region (um).
-        wavelength_start: 1.2 (um).
-        wavelength_stop: 1.6 (um).
-        wavelength_points: 500.
-        simulation_time: (s) related to max path length
-            3e8/2.4*10e-12*1e6 = 1.25mm.
-        simulation_temperature: in kelvin (default = 300).
-        frequency_dependent_profile: compute mode profiles for each wavelength.
-        field_profile_samples: number of wavelengths to compute field profile.
-    """
 
     background_material: str = "sio2"
     port_margin: float = 1.5
@@ -130,17 +110,7 @@ def _interpolate_material(
     wavelengths: list[float],
     refractive_index: list[float],
 ) -> npt.NDArray[np.float64]:
-    """Returns Interpolated refractive index of material for given wavelength.
-
-    Args:
-        wav: wavelength (um) to interpolate.
-        wavelengths: list of reference wavelengths (um).
-        refractive_index: list of reference refractive indices.
-    """
-    from scipy import interpolate
-
-    f = interpolate.interp1d(wavelengths, refractive_index)
-    return f(wav)  # type: ignore[no-any-return]
+    pass
 
 
 si = partial(

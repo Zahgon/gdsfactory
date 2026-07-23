@@ -1,4 +1,3 @@
-"""Sagnac loop_mirror."""
 
 from __future__ import annotations
 
@@ -15,25 +14,4 @@ def loop_mirror(
     bend90: ComponentSpec = "bend_euler",
     cross_section: CrossSectionSpec = "strip",
 ) -> Component:
-    """Returns Sagnac loop_mirror.
-
-    Args:
-        component: 1x2 splitter.
-        bend90: 90 deg bend.
-        cross_section: cross_section settings.
-
-    """
-    c = Component()
-    component = gf.get_component(component)
-    bend90 = gf.get_component(bend90)
-    cref = c.add_ref(component)
-    gf.routing.route_single(
-        c,
-        cref.ports["o3"],
-        cref.ports["o2"],
-        straight=gf.components.straight,
-        bend=bend90,
-        cross_section=cross_section,
-    )
-    c.add_port(name="o1", port=cref.ports["o1"])
-    return c
+    pass

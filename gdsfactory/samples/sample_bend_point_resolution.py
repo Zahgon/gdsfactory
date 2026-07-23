@@ -1,8 +1,3 @@
-"""Compare bend angular resolutions.
-
-Shows the effect of different angular_step values on bend point density.
-Smaller angular_step = smoother curves with more points.
-"""
 
 from __future__ import annotations
 

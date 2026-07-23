@@ -1,7 +1,3 @@
-"""A minimal implementation of Dubins paths for waveguide routing adapted for gdsFactory by Quentin Wach.
-
-https://quentinwach.com/blog/2024/02/15/dubins-paths-for-waveguide-routing.html
-"""
 
 import math as m
 from math import cos, radians, sin
@@ -31,19 +27,16 @@ def route_dubins(
         port2: output port.
         cross_section: cross-section.
     """
-    # Get start position and orientation
     x1, y1 = port1.center
     angle1 = float(port1.orientation)
     START = (x1, y1, angle1)  # Convert to um
 
-    # Get end position and orientation
     x2, y2 = port2.center
     angle2 = float(port2.orientation)
     angle2 = (angle2 + 180) % 360  # Adjust for input connection
     END = (x2, y2, angle2)  # Convert to um
 
     xs = gf.get_cross_section(cross_section)
-    # Find the Dubins path between ports using radius from cross-section
     path = dubins_path(start=START, end=END, cross_section=xs)  # Convert radius to um
     instances = place_dubins_path(component, xs, port1, solution=path)
     length = dubins_path_length(START, END, xs)
@@ -148,7 +141,6 @@ def dubins_path_length(
     """Calculate the length of a Dubins path."""
     (sx, sy, syaw) = start
     (ex, ey, _) = end
-    # convert the degree angle inputs to radians
     syaw = m.radians(syaw)
 
     ex = ex - sx
@@ -169,34 +161,27 @@ def dubins_path(
     (sx, sy, syaw) = start  # Coordinates already in um
     (ex, ey, eyaw) = end  # Coordinates already in um
 
-    # Convert angles to radians
     syaw = m.radians(syaw)
     eyaw = m.radians(eyaw)
 
-    # Use radius in um
     c = xs.radius  # Already converted to um
 
     assert c is not None, "Cross-section radius is None"
 
-    # Calculate relative end position
     ex = ex - sx
     ey = ey - sy
 
-    # Transform to local coordinates
     lex = m.cos(syaw) * ex + m.sin(syaw) * ey
     ley = -m.sin(syaw) * ex + m.cos(syaw) * ey
     leyaw = eyaw - syaw
 
-    # Calculate normalized distance
     D = m.sqrt(lex**2.0 + ley**2.0)
     d = D / c  # Normalize by radius
 
-    # Calculate angles for path planning
     theta = mod_to_pi(m.atan2(ley, lex))
     alpha = mod_to_pi(-theta)
     beta = mod_to_pi(leyaw - theta)
 
-    # Find best path
     planners = ["LSL", "RSR", "LSR", "RSL", "RLR", "LRL"]
     bcost = float("inf")
     bt, bp, bq, bmode = None, None, None, None
@@ -213,7 +198,6 @@ def dubins_path(
 
     assert bt is not None and bp is not None and bq is not None and bmode is not None
 
-    # Return path segments with lengths in um
     return list(zip(bmode, [bt * c, bp * c, bq * c], [c] * 3, strict=False))
 
 
@@ -223,37 +207,17 @@ def mod_to_pi(angle: float) -> float:
 
 
 def pi_to_pi(angle: float) -> float:
-    """Constrains an angle to the range [-pi, pi]."""
-    while angle >= m.pi:
-        angle = angle - 2.0 * m.pi
-    while angle <= -m.pi:
-        angle = angle + 2.0 * m.pi
-    return angle
+    pass
 
 
 def linear(
     start: tuple[float, float, float], end: tuple[float, float, float], steps: int
 ) -> tuple[list[float], list[float]]:
-    """Creates a list of points on lines between a given start point and end point.
-
-    start/end: [x, y, angle], the start/end point with given jaw angle.
-    """
-    start_x, start_y = start[0], start[1]
-    dx = (end[0] - start_x) / steps
-    dy = (end[1] - start_y) / steps
-
-    # Preallocate output array
-    x = [start_x + i * dx for i in range(steps + 1)]
-    y = [start_y + i * dy for i in range(steps + 1)]
-    return x, y
+    pass
 
 
 def arrow_orientation(angle: float) -> tuple[float, float]:
-    """Returns x, y setoffs for a given angle to orient the arrows marking the yaw of the start and end points."""
-    rad = radians(angle)
-    alpha_x = cos(rad)
-    alpha_y = sin(rad)
-    return alpha_x, alpha_y
+    pass
 
 
 def place_dubins_path(
@@ -277,7 +241,6 @@ def place_dubins_path(
 
     for mode, length, radius in solution:
         if mode == "L":
-            # Length and radius are in um, convert to nm for gdsfactory
             arc_angle = 180 * length / (m.pi * radius)
             bend = c.add_ref_off_grid(
                 bend_circular_all_angle(angle=arc_angle, cross_section=xs)

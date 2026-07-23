@@ -1,4 +1,3 @@
-"""Route bundle all-angle connecting rotated mmi2x2 components."""
 
 from __future__ import annotations
 

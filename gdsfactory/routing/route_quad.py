@@ -1,4 +1,3 @@
-"""Route for electrical based on phidl.routing.route_quad."""
 
 from __future__ import annotations
 
@@ -76,7 +75,6 @@ def route_quad(
     vertices = np.array(get_port_edges(port1, width1) + get_port_edges(port2, width2))
     center = np.mean(vertices, axis=0)
     displacements = vertices - center
-    # sort vertices by angle from center of quadrilateral to make convex polygon
     angles = np.arctan2(displacements[:, 0], displacements[:, 1])
     sorted_vertices: npt.NDArray[np.floating[Any]] = np.array(
         [

@@ -101,28 +101,13 @@ def extract(
 
 
 def move_to_center(component: Component, dx: float = 0, dy: float = 0) -> gf.Component:
-    """Moves the component to the center of the bounding box."""
-    c = component
-    c.transform(gf.kdb.DTrans(-c.dbbox().center().x + dx, -c.dbbox().center().y + dy))
-    return c
+    pass
 
 
 def move_port(
     component: Component, port_name: str, dx: float = 0, dy: float = 0
 ) -> gf.Component:
-    """Moves the component port to a specific location.
-
-    Warning: This function modifies the component in-place.
-
-    Args:
-        component: to move the port.
-        port_name: to move.
-        dx: to move the port.
-        dy: to move the port.
-    """
-    c = component
-    c.transform(gf.kdb.DTrans(-c.ports[port_name].x + dx, -c.ports[port_name].y + dy))
-    return c
+    pass
 
 
 type GetPolygonsResult = "dict[LayerSpec, list[kf.kdb.Polygon]]"
@@ -237,23 +222,11 @@ def get_polygons_points(
 def get_point_inside(
     component_or_instance: Component | ComponentReference, layer: LayerSpec
 ) -> npt.NDArray[np.floating[Any]]:
-    """Returns a point inside the component or instance.
-
-    Args:
-        component_or_instance: to find a point inside.
-        layer: to find a point inside.
-    """
-    layer = gf.get_layer(layer)
-    return np.array(
-        get_polygons_points(component_or_instance, layers=[layer])[layer][0][0]
-    )
+    pass
 
 
 def sign_shape(pts: npt.NDArray[np.floating[Any]]) -> float:
-    pts2 = np.roll(pts, 1, axis=0)
-    dx = pts2[:, 0] - pts[:, 0]
-    y = pts2[:, 1] + pts[:, 1]
-    return float(np.sign((dx * y).sum()))
+    pass
 
 
 def area(pts: npt.NDArray[np.floating[Any]]) -> float:
@@ -291,7 +264,6 @@ def curvature(
     by (x' y'' - x'' y' ) / (x' **2 + y' **2)**(3/2)
 
     """
-    # Use centered difference for derivative
     dt = centered_diff(t)
     dp = centered_diff(points)
     dp2 = centered_diff2(points)
@@ -310,18 +282,11 @@ def curvature(
 def radius_of_curvature(
     points: npt.NDArray[np.floating[Any]], t: npt.NDArray[np.floating[Any]]
 ) -> npt.NDArray[np.floating[Any]]:
-    return 1 / curvature(points, t)
+    pass
 
 
 def path_length(points: npt.NDArray[np.floating[Any]]) -> float:
-    """Returns: The path length.
-
-    Args:
-        points: With shape (N, 2) representing N points with coordinates x, y.
-    """
-    dpts = points[1:, :] - points[:-1, :]
-    _d = dpts**2
-    return float(np.sum(np.sqrt(_d[:, 0] + _d[:, 1])))
+    pass
 
 
 def snap_angle(a: float) -> float:
@@ -511,47 +476,4 @@ def remove_shapes_near_exclusion(
     remove_entire_shapes: bool = True,
     flatten: bool = True,
 ) -> gf.Component:
-    """Remove shapes on target_layer that interact with exclusion_layer.
-
-    Args:
-        c: Component to modify.
-        target_layer: Layer containing shapes to potentially remove.
-        exclusion_layer: Layer defining exclusion zones.
-        margin: Exclusion margin/halo in microns (default 2.0).
-        remove_entire_shapes: If True, removes entire shapes that touch the
-            exclusion zone. If False, only clips the overlapping portions.
-        flatten: If True, flattens the component before processing.
-
-    Returns:
-        Modified component with shapes removed/clipped.
-    """
-    import klayout.db as kdb
-
-    if flatten:
-        c.flatten()
-
-    # Convert margin to database units
-    margin_dbu = c.kcl.to_dbu(margin)
-
-    # Get the exclusion region and expand it
-    exclusion_layer_kdb = gf.get_layer(exclusion_layer)
-    exclusion_region = kdb.Region(c.begin_shapes_rec(exclusion_layer_kdb))
-    halo_region = exclusion_region.sized(margin_dbu)
-
-    # Get target shapes
-    target_layer_kdb = gf.get_layer(target_layer)
-    target_region = kdb.Region(cast(kf.kdb.Shapes, c.shapes(target_layer_kdb)))  # type: ignore[redundant-cast]
-
-    if remove_entire_shapes:
-        # Remove entire shapes that interact with the exclusion halo
-        # A shape "interacts" if it has any overlap with the halo
-        overlapping = target_region.overlapping(halo_region)
-        cleaned_region = target_region - overlapping
-    else:
-        # Just clip/subtract the overlapping portions
-        cleaned_region = target_region - halo_region
-
-    # Clear target layer and add cleaned geometry
-    cast(kdb.Shapes, c.shapes(target_layer_kdb)).clear()  # type: ignore[redundant-cast]
-    c.shapes(target_layer_kdb).insert(cleaned_region)
-    return c
+    pass

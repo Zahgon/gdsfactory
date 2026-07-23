@@ -20,13 +20,6 @@ T = TypeVar("T", bound="AbstractLayer")
 
 
 class AbstractLayer(BaseModel):
-    """Generic design layer.
-
-    Attributes:
-        sizings_xoffsets: sequence of xoffset sizings to apply to this Logical or Derived layer.
-        sizings_yoffsets: sequence of yoffset sizings to apply to this Logical or Derived layer.
-        sizings_modes: sequence of sizing modes to apply to this Logical or Derived layer.
-    """
 
     sizings_xoffsets: Sequence[int] = (0,)
     sizings_yoffsets: Sequence[int] = (0,)
@@ -35,13 +28,8 @@ class AbstractLayer(BaseModel):
     def _perform_operation(
         self, other: AbstractLayer, operation: Literal["and", "or", "xor", "not"]
     ) -> DerivedLayer:
-        if isinstance(other, DerivedLayer | LogicalLayer) and isinstance(
-            self, DerivedLayer | LogicalLayer
-        ):
-            return DerivedLayer(layer1=self, layer2=other, operation=operation)
-        raise ValueError(f"{other} is not a DerivedLayer or LogicalLayer")
+        pass
 
-    # Boolean AND (&)
     def __and__(self, other: AbstractLayer) -> DerivedLayer:
         """Represents boolean AND (&) operation between two layers.
 
@@ -53,7 +41,6 @@ class AbstractLayer(BaseModel):
         """
         return self._perform_operation(other, "and")
 
-    # Boolean OR (|, +)
     def __or__(self, other: AbstractLayer) -> DerivedLayer:
         """Represents boolean OR (|) operation between two layers.
 
@@ -76,7 +63,6 @@ class AbstractLayer(BaseModel):
         """
         return self._perform_operation(other, "or")
 
-    # Boolean XOR (^)
     def __xor__(self, other: AbstractLayer) -> DerivedLayer:
         """Represents boolean XOR (^) operation between two derived layers.
 
@@ -88,7 +74,6 @@ class AbstractLayer(BaseModel):
         """
         return self._perform_operation(other, "xor")
 
-    # Boolean NOT (-)
     def __sub__(self, other: AbstractLayer) -> DerivedLayer:
         """Represents boolean NOT (-) operation on a derived layer.
 
@@ -113,7 +98,6 @@ class AbstractLayer(BaseModel):
             yoffset (int | tuple): number of dbu units to buffer by in the y-direction. If not specified, uses xfactor. Can be a tuple for sequential sizing operations.
             mode (int | tuple): mode of the sizing operation(s). Can be a tuple for sequential sizing operations.
         """
-        #  Validate inputs
         xoffset_list: list[int]
         if isinstance(xoffset, int):
             xoffset_list = [xoffset]
@@ -143,12 +127,10 @@ class AbstractLayer(BaseModel):
         else:
             mode_list = [mode] * len(xoffset_list)
 
-        # Accumulate
         sizings_xoffsets = list(self.sizings_xoffsets) + xoffset_list
         sizings_yoffsets = list(self.sizings_yoffsets) + yoffset_list
         sizings_modes = list(self.sizings_modes) + mode_list
 
-        # Return a copy of the layer with updated sizings
         current_layer_attributes = self.__dict__.copy()
         current_layer_attributes["sizings_xoffsets"] = sizings_xoffsets
         current_layer_attributes["sizings_yoffsets"] = sizings_yoffsets
@@ -157,7 +139,6 @@ class AbstractLayer(BaseModel):
 
 
 class LogicalLayer(AbstractLayer):
-    """GDS design layer."""
 
     layer: LayerSpec
 
@@ -225,15 +206,6 @@ class LogicalLayer(AbstractLayer):
 
 
 class DerivedLayer(AbstractLayer):
-    """Physical "derived layer", resulting from a combination of GDS design layers. Can be used by renderers and simulators.
-
-    Overloads operators for simpler expressions.
-
-    Attributes:
-        input_layer1: primary layer comprising the derived layer. Can be a GDS design layer (kf.kcell.LayerEnum , tuple[int, int]), or another derived layer.
-        input_layer2: secondary layer comprising the derived layer. Can be a GDS design layer (kf.kcell.LayerEnum , tuple[int, int]), or another derived layer.
-        operation: operation to perform between layer1 and layer2. One of "and", "or", "xor", or "not" or associated symbols.
-    """
 
     layer1: DerivedLayer | LogicalLayer
     layer2: DerivedLayer | LogicalLayer
@@ -261,26 +233,14 @@ class DerivedLayer(AbstractLayer):
 
     @property
     def keyword_to_symbol(self) -> dict[str, str]:
-        return {
-            "and": "&",
-            "or": "|",
-            "xor": "^",
-            "not": "-",
-        }
+        pass
 
     @property
     def symbol_to_keyword(self) -> dict[str, str]:
-        return {
-            "&": "and",
-            "|": "or",
-            "^": "xor",
-            "-": "not",
-        }
+        pass
 
     def get_symbol(self) -> str:
-        if self.operation in self.keyword_to_symbol:
-            return self.keyword_to_symbol[self.operation]
-        return self.operation
+        pass
 
     def get_shapes(self, component: Component) -> kf.kdb.Region:
         """Return the shapes of the component argument corresponding to this layer.
@@ -320,37 +280,11 @@ type BroadLayer = LogicalLayer | DerivedLayer | int | str | tuple[int, int] | La
 
 
 class LayerLevel(BaseModel):
-    """Level for 3D LayerStack.
 
-    Parameters:
-        name: str
-        layer: LogicalLayer or DerivedLayer. DerivedLayers can be composed of operations consisting of multiple other GDSLayers or other DerivedLayers.
-        derived_layer: if the layer is derived, LogicalLayer to assign to the derived layer.
-        thickness: layer thickness in um.
-        thickness_tolerance: layer thickness tolerance in um.
-        width_tolerance: layer width tolerance in um.
-        zmin: height position where material starts in um.
-        zmin_tolerance: layer height tolerance in um.
-        sidewall_angle: in degrees with respect to normal.
-        sidewall_angle_tolerance: in degrees.
-        width_to_z: if sidewall_angle, reference z-position (0 --> zmin, 1 --> zmin + thickness, 0.5 in the middle).
-        bias: shrink/grow of the level compared to the mask
-        z_to_bias: most generic way to specify an extrusion.\
-            Two tuples of the same length specifying the shrink/grow (float) to apply between zmin (0) and zmin + thickness (1)\
-            I.e. [[z1, z2, ..., zN], [bias1, bias2, ..., biasN]]\
-                    Defaults no buffering [[0, 1], [0, 0]].
-                    NOTE: A dict might be more expressive.
-        mesh_order: lower mesh order (e.g. 1) will have priority over higher mesh order (e.g. 2) in the regions where materials overlap.
-        material: used in the klayout script
-        info: all other rendering and simulation metadata should go here.
-    """
-
-    # ID
     name: str | None = None
     layer: BroadLayer
     derived_layer: LogicalLayer | None = None
 
-    # Extrusion rules
     thickness: float
     thickness_tolerance: float | None = None
     width_tolerance: float | None = None
@@ -362,44 +296,26 @@ class LayerLevel(BaseModel):
     z_to_bias: tuple[list[float], list[float]] | None = None
     bias: tuple[float, float] | float | None = None
 
-    # Rendering
     mesh_order: int = 3
     material: str | None = None
 
-    # Other
     info: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("layer")
     @classmethod
     def check_layer(cls, layer: BroadLayer) -> LogicalLayer | DerivedLayer:
-        if isinstance(layer, LogicalLayer | DerivedLayer):
-            return layer
-        return LogicalLayer(layer=layer)
+        pass
 
     @model_validator(mode="after")
     def check_derived_layer(self) -> LayerLevel:
-        if isinstance(self.layer, DerivedLayer) and self.derived_layer is None:
-            raise ValueError("derived_layer is required when layer is a DerivedLayer")
-        return self
+        pass
 
     @property
     def bounds(self) -> tuple[float, float]:
-        """Calculates and returns the bounds of the layer level in the z-direction.
-
-        Returns:
-            tuple: A tuple containing the minimum and maximum z-values of the layer level.
-        """
-        z_values = [self.zmin, self.zmin + self.thickness]
-        z_values.sort()
-        return z_values[0], z_values[1]
+        pass
 
 
 class LayerStack(BaseModel):
-    """For simulation and 3D rendering. Captures design intent of the chip layers after fabrication.
-
-    Parameters:
-        layers: dict of layer_levels.
-    """
 
     layers: dict[str, LayerLevel] = Field(
         default_factory=dict,
@@ -422,31 +338,10 @@ class LayerStack(BaseModel):
                 self.layers[field] = val
 
     def pprint(self) -> None:
-        console = Console()
-        table = Table(show_header=True, header_style="bold")
-        keys = ["layer", "thickness", "material", "sidewall_angle"]
-
-        for key in ["name", *keys]:
-            table.add_column(key)
-
-        for layer_name, layer in self.layers.items():
-            port_dict = dict(layer)
-            row = [layer_name] + [str(port_dict.get(key, "")) for key in keys]
-            table.add_row(*row)
-
-        console.print(table)
+        pass
 
     def get_layer_to_thickness(self) -> dict[BroadLayer, float]:
-        """Returns layer tuple to thickness (um)."""
-        layer_to_thickness: dict[BroadLayer, float] = {}
-
-        for level in self.layers.values():
-            layer = level.layer
-
-            if (layer and level.thickness) or hasattr(level, "operator"):
-                layer_to_thickness[layer] = level.thickness
-
-        return layer_to_thickness
+        pass
 
     def get_component_with_derived_layers(
         self, component: Component, **kwargs: Any
@@ -457,51 +352,24 @@ class LayerStack(BaseModel):
         )
 
     def get_layer_to_zmin(self) -> dict[BroadLayer, float]:
-        """Returns layer tuple to z min position (um)."""
-        return {
-            level.layer: level.zmin for level in self.layers.values() if level.thickness
-        }
+        pass
 
     def get_layer_to_material(self) -> dict[BroadLayer, str | None]:
-        """Returns layer tuple to material name."""
-        return {
-            level.layer: level.material
-            for level in self.layers.values()
-            if level.thickness
-        }
+        pass
 
     def get_layer_to_sidewall_angle(self) -> dict[BroadLayer, float]:
-        """Returns layer tuple to material name."""
-        return {
-            level.layer: level.sidewall_angle
-            for level in self.layers.values()
-            if level.thickness
-        }
+        pass
 
     def get_layer_to_info(self) -> dict[BroadLayer, dict[str, Any]]:
-        """Returns layer tuple to info dict."""
-        return {level.layer: level.info for level in self.layers.values()}
+        pass
 
     def get_layer_to_layername(self) -> dict[BroadLayer, list[str]]:
-        """Returns layer tuple to layername."""
-        d: dict[BroadLayer, list[str]] = defaultdict(list)
-        for level_name, level in self.layers.items():
-            d[level.layer].append(level_name)
-
-        return d
+        pass
 
     def get_layer_to_mesh_order(
         self,
     ) -> dict[BroadLayer, int]:
-        """Returns layer tuple to mesh order."""
-        d: dict[BroadLayer, int] = defaultdict(int)
-        for level in self.layers.values():
-            if level.info is not None and "mesh_order" in level.info:
-                # cspdk LayerStack has the mesh_order in the info dict, override default mesh_order if specified there
-                d[level.layer] = level.info["mesh_order"]
-            else:
-                d[level.layer] = level.mesh_order
-        return d
+        pass
 
     def to_dict(self) -> dict[str, dict[str, Any]]:
         return {level_name: dict(level) for level_name, level in self.layers.items()}
@@ -519,144 +387,16 @@ class LayerStack(BaseModel):
         layer_views: LayerViews | None = None,
         dbu: float | None = 0.001,
     ) -> str:
-        """Returns script for 2.5D view in KLayout.
-
-        You can include this information in your tech.lyt
-
-        Args:
-            layer_views: optional layer_views.
-            dbu: Optional database unit. Defaults to 1nm.
-        """
-        if self.layers is None:
-            return ""
-        layers = self.layers
-
-        # Collect etch layers
-        etch_layers = {
-            layer_name: str(level.layer)
-            for layer_name, level in layers.items()
-            if isinstance(level.layer, DerivedLayer)
-        }
-
-        from gdsfactory.pdk import get_layer_tuple
-
-        def get_base_layers(layer: BroadLayer) -> dict[str, tuple[int, int]]:
-            base_layers = {}
-            if isinstance(layer, DerivedLayer):
-                base_layers.update(get_base_layers(layer.layer1))
-                base_layers.update(get_base_layers(layer.layer2))
-            elif isinstance(layer, LogicalLayer):
-                base_layers[str(layer)] = get_layer_tuple(layer.layer)
-            return base_layers
-
-        base_layers = {
-            k: v
-            for layer_name in etch_layers
-            for k, v in get_base_layers(layers[layer_name].layer).items()
-        }
-
-        unetched_layers = {
-            layer_name: get_layer_tuple(level.layer.layer)
-            for layer_name, level in layers.items()
-            if isinstance(level.layer, LogicalLayer)
-        }
-
-        # Define base layers
-        out = "# base layers\n"
-        out += "\n".join(
-            [
-                f"{layer_name} = input({layer[0]}, {layer[1]})"
-                for layer_name, layer in base_layers.items()
-            ]
-        )
-        out += "\n\n"
-
-        # Define unetched layers
-        out += "# unetched layers\n"
-        out += "\n".join(
-            [
-                f"{layer_name} = input({layer[0]}, {layer[1]})"
-                for layer_name, layer in unetched_layers.items()
-            ]
-        )
-        out += "\n\n"
-
-        # Define etch layers
-        out += "# etch layers\n"
-        out += "\n".join(
-            [
-                f"{layer_name} = {layer_expr}"
-                for layer_name, layer_expr in etch_layers.items()
-            ]
-        )
-        out += "\n\n"
-
-        if layer_views is None:
-            from gdsfactory.pdk import get_layer_views
-
-            layer_views = get_layer_views()
-        layers_in_layer_views = layer_views.get_layer_tuples() if layer_views else set()
-
-        for layer_name, level in layers.items():
-            zmin = level.zmin
-            zmax = zmin + level.thickness
-            if dbu:
-                rnd_pl = len(str(dbu).split(".")[-1])
-                zmin = round(zmin, rnd_pl)
-                zmax = round(zmax, rnd_pl)
-
-            if layer_name in etch_layers:
-                layer = level.derived_layer
-            elif layer_name in unetched_layers:
-                assert isinstance(level.layer, LogicalLayer)
-                layer = level.layer
-
-            layer_tuple = get_layer_tuple(layer.layer)  # type: ignore[union-attr]
-
-            name = f"{layer_name}: {level.material} {layer_tuple[0]}/{layer_tuple[1]}"
-            txt = f"z({layer_name}, zstart: {zmin}, zstop: {zmax}, name: '{name}'"
-
-            if layer_views:
-                if layer_tuple in layers_in_layer_views:
-                    props = layer_views.get_from_tuple(layer_tuple)
-                    if (
-                        hasattr(props, "color")
-                        and hasattr(props.color, "fill")
-                        and hasattr(props.color, "frame")
-                    ):
-                        txt += ", "
-                        if props.color.fill == props.color.frame:
-                            txt += f"color: {props.color.fill}"
-                        else:
-                            txt += (
-                                f"fill: {props.color.fill}, frame: {props.color.frame}"
-                            )
-            txt += ")"
-            out += f"{txt}\n"
-
-        return out
+        pass
 
     def filtered(self, layers: list[str]) -> LayerStack:
-        """Returns filtered layerstack, given layer specs."""
-        return LayerStack(
-            layers={k: self.layers[k] for k in layers if k in self.layers}
-        )
+        pass
 
     def z_offset(self, dz: float) -> LayerStack:
-        """Translates the z-coordinates of the layerstack."""
-        layers = self.layers or {}
-        for layer in layers.values():
-            layer.zmin += dz
-
-        return self
+        pass
 
     def invert_zaxis(self) -> LayerStack:
-        """Flips the zmin values about the origin."""
-        layers = self.layers or {}
-        for layer in layers.values():
-            layer.zmin *= -1
-
-        return self
+        pass
 
 
 def get_component_with_derived_layers(

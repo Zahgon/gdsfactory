@@ -1,4 +1,3 @@
-"""Route bundle connecting left and right ports with different y-spacings."""
 
 from __future__ import annotations
 

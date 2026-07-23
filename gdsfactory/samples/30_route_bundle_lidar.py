@@ -1,10 +1,3 @@
-"""LiDAR demo.
-
-Exercise1. increase the number of noutputs of the phase array.
-
-Exercise2. Make a PCell.
-
-"""
 
 from __future__ import annotations
 
@@ -19,7 +12,6 @@ if __name__ == "__main__":
     antenna_pitch = 2.0
     splitter_tree_spacing = (50.0, 70.0)
 
-    # power Splitter
     ref = c << gf.components.array(
         gf.components.straight(),
         rows=noutputs,
@@ -29,7 +21,6 @@ if __name__ == "__main__":
         centered=True,
     )
 
-    # antennas
     antennas = c << gf.components.array(
         gf.components.dbr(n=200),
         rows=noutputs,

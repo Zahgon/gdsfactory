@@ -1,4 +1,3 @@
-"""Sample demonstrating the A* router for obstacle-aware waveguide routing."""
 
 from __future__ import annotations
 

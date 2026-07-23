@@ -1,4 +1,3 @@
-"""Route multiple Dubins paths between two rotated multi-port components."""
 
 from __future__ import annotations
 

@@ -14,34 +14,7 @@ def bbox_to_points(
     left: float = 0,
     right: float = 0,
 ) -> list[tuple[float, float]]:
-    """Returns bounding box rectangle with offsets.
-
-    Args:
-        bbox: DBbox.
-        top: north offset.
-        bottom: south offset.
-        left: west offset.
-        right: east offset.
-
-    """
-    # Combine all casts and attribute access in one statement to minimize overhead.
-    xmin = float(bbox.left)
-    ymin = float(bbox.bottom)
-    xmax = float(bbox.right)
-    ymax = float(bbox.top)
-
-    b_left = xmin - left
-    b_right = xmax + right
-    b_bottom = ymin - bottom
-    b_top = ymax + top
-
-    # Return tuples directly to avoid intermediate list creation in the expression.
-    return [
-        (b_left, b_bottom),
-        (b_right, b_bottom),
-        (b_right, b_top),
-        (b_left, b_top),
-    ]
+    pass
 
 
 @gf.cell_with_module_name(tags=["shapes"])

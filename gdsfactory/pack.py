@@ -1,7 +1,3 @@
-"""pack a list of components into as few components as possible.
-
-Adapted from PHIDL https://github.com/amccaugh/phidl/ by Adam McCaughan
-"""
 
 from __future__ import annotations
 
@@ -45,18 +41,13 @@ def _pack_single_bin(
     """
     import rectpack
 
-    # Compute total area and use it for an initial estimate of the bin size
     total_area = sum(r[0] * r[1] for r in rect_dict.values())
     aspect_ratio = np.asarray(aspect_ratio) / np.linalg.norm(aspect_ratio)  # Normalize
 
-    # Setup variables
     box_size = np.asarray(aspect_ratio * np.sqrt(total_area), dtype=np.float64)
     box_size = np.clip(box_size, None, max_size)
     rp_sort = rectpack.SORT_AREA if sort_by_area else rectpack.SORT_NONE
-    # Repeatedly run the rectangle-packing algorithm with increasingly larger
-    # areas until everything fits or we've reached the maximum size
     while True:
-        # Create the pack object
         rect_packer = rectpack.newPacker(
             mode=rectpack.PackingMode.Offline,
             pack_algo=rectpack.MaxRectsBlsf,
@@ -65,23 +56,19 @@ def _pack_single_bin(
             rotation=False,
         )
 
-        # Add each rectangle to the pack, create a single bin, and pack
         for rid, r in rect_dict.items():
             rect_packer.add_rect(width=r[0], height=r[1], rid=rid)
         rect_packer.add_bin(width=box_size[0], height=box_size[1])
         rect_packer.pack()
 
-        # Adjust the box size for next time
         box_size *= density  # Increase area to try to fit
         box_size = np.clip(box_size, None, max_size)
 
-        # Quit the loop if we've packed all the rectangles or reached the max size
         if len(rect_packer.rect_list()) == len(rect_dict):
             break
         if all(box_size >= max_size):
             break
 
-    # Separate packed from unpacked rectangles, make dicts of form {id:(x,y,w,h)}
     packed_rect_dict = {r[-1]: r[:-1] for r in rect_packer[0].rect_list()}
     unpacked_rect_dict = {
         k: v for k, v in rect_dict.items() if k not in packed_rect_dict
@@ -179,7 +166,6 @@ def pack(
             "The density argument must be >= 1.01"
         )
 
-    # Sanitize max_size variable
     max_size_filtered = tuple(np.inf if v is None else v for v in max_size)
     max_size_array: npt.NDArray[np.floating[Any]] = np.asarray(
         max_size_filtered, dtype=np.float64
@@ -189,7 +175,6 @@ def pack(
 
     components = [gf.get_component(component) for component in component_list]
 
-    # Convert Components to rectangles
     rect_dict: dict[int, tuple[float, float]] = {}
     for n, _component in enumerate(components):
         size = np.array([_component.xsize, _component.ysize])
@@ -233,7 +218,6 @@ def pack(
                 row = df.loc[name]
                 x, y, w, h = row["x"], row["y"], row["w"], row["h"]
             else:
-                # fallback values if name is not found
                 x, y, w, h = rect
                 df.loc[name] = [x, y, w, h]
 

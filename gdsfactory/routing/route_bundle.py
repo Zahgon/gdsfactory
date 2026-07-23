@@ -1,14 +1,3 @@
-"""Routes bundles of ports (river routing).
-
-get bundle is the generic river routing function
-route_bundle calls different function depending on the port orientation.
-
- - route_bundle_same_axis: ports facing each other with arbitrary pitch on each side
- - route_bundle_corner: 90Deg / 270Deg between ports with arbitrary pitch
- - route_bundle_udirect: ports with direct U-turns
- - route_bundle_uindirect: ports with indirect U-turns
-
-"""
 
 from __future__ import annotations
 
@@ -133,7 +122,6 @@ def _ensure_manhattan_waypoints(
             result.append(curr)
             continue
 
-        # Non-Manhattan segment - insert a corner point
         if len(result) >= 2:
             prev_prev = result[-2]
             last_horizontal = abs(prev.x - prev_prev.x) > abs(prev.y - prev_prev.y)
@@ -284,7 +272,6 @@ def route_bundle(
     if raise_on_error is None:
         raise_on_error = CONF.raise_on_error
 
-    # Support deprecated port1/port2 keyword arguments
     if port1 is not None:
         if ports1 is not None:
             raise ValueError("Cannot specify both ports1 and port1")
@@ -297,17 +284,14 @@ def route_bundle(
     if ports1 is None or ports2 is None:
         raise ValueError("ports1 and ports2 are required")
 
-    # Wrap single ports in lists
     if isinstance(ports1, kf.DPort):
         ports1 = [ports1]
     if isinstance(ports2, kf.DPort):
         ports2 = [ports2]
 
-    # Ensure ports are lists (they may be reversed, generators, etc.)
     port_list1 = list(ports1)
     port_list2 = list(ports2)
 
-    # Resolve Pin inputs to Ports
     if port_list1 and isinstance(port_list1[0], kf.DPin):
         if not (port_list2 and isinstance(port_list2[0], kf.DPin)):
             raise TypeError(
@@ -442,7 +426,6 @@ def route_bundle(
 
         bboxes.append(bbox1)
         bboxes.append(bbox2)
-        # component.shapes(component.kcl.layer(1,0)).insert(bbox)
 
     if steps and waypoints:
         raise ValueError("Provide only one of steps or waypoints")
@@ -517,23 +500,14 @@ def route_bundle(
     )
 
     def straight_um(width: float, length: float) -> gf.Component:
-        return gf.get_component(
-            straight, length=length, cross_section=cross_section, width=width
-        )
+        pass
 
     if sbend:
 
         def _sbend(
             c: gf.kf.ProtoTKCell[Any], offset: float, length: float, width: float
         ) -> gf.kf.DInstanceGroup:
-            sb = gf.get_component(
-                sbend,
-                cross_section=cross_section,
-                width=width,
-                size=(length, offset),
-            )
-            sb_ref = component << sb
-            return gf.kf.DInstanceGroup(insts=[sb_ref], ports=list(sb_ref.ports))
+            pass
 
     if path_length_matching_config is not None and constraints is not None:
         raise ValueError(

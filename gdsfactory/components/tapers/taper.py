@@ -228,42 +228,7 @@ def taper_strip_to_ridge_trenches(
     layer_wg: LayerSpec = "WG",
     trench_offset: float = 0.1,
 ) -> gf.Component:
-    """Defines taper using trenches to define the etch.
-
-    Args:
-        length: in um.
-        width: in um.
-        slab_offset: in um.
-        trench_width: in um.
-        trench_layer: trench layer.
-        layer_wg: waveguide layer.
-        trench_offset: after waveguide in um.
-    """
-    c = gf.Component()
-    y0 = width / 2 + trench_width - trench_offset
-    yL = width / 2 + trench_width - trench_offset + slab_offset
-
-    # straight
-    x = [0, length, length, 0]
-    yw = [y0, yL, -yL, -y0]
-    c.add_polygon(list(zip(x, yw, strict=False)), layer=layer_wg)
-
-    # top trench
-    ymin0 = width / 2
-    yminL = width / 2
-    ymax0 = width / 2 + trench_width
-    ymaxL = width / 2 + trench_width + slab_offset
-    x = [0, length, length, 0]
-    ytt = [ymin0, yminL, ymaxL, ymax0]
-    ytb = [-ymin0, -yminL, -ymaxL, -ymax0]
-    c.add_polygon(list(zip(x, ytt, strict=False)), layer=trench_layer)
-    c.add_polygon(list(zip(x, ytb, strict=False)), layer=trench_layer)
-
-    c.add_port(name="o1", center=(0, 0), width=width, orientation=180, layer=layer_wg)
-    c.add_port(
-        name="o2", center=(length, 0), width=width, orientation=0, layer=layer_wg
-    )
-    return c
+    pass
 
 
 taper_strip_to_slab150 = partial(taper_strip_to_ridge, layer_slab="SLAB150")
@@ -316,36 +281,7 @@ def taper_nc_sc(
     width_tip_silicon: float = 0.15,
     cross_section: CrossSectionSpec = "strip",
 ) -> Component:
-    """Taper from nitride to strip.
-
-    Args:
-        width1: nitride width.
-        width2: silicon width.
-        length: taper length.
-        layer_wg: nitride layer.
-        layer_nitride: strip layer.
-        width_tip_nitride: tip width for nitride.
-        width_tip_silicon: tip width for strip.
-        cross_section: cross_section specification.
-    """
-    c = gf.Component()
-    taper = taper_sc_nc(
-        width1=width2,
-        width2=width1,
-        length=length,
-        layer_wg=layer_wg,
-        layer_nitride=layer_nitride,
-        width_tip_nitride=width_tip_nitride,
-        width_tip_silicon=width_tip_silicon,
-        cross_section=cross_section,
-    )
-    c.copy_child_info(taper)
-    ref = c << taper
-    ref.mirror_x()
-    c.add_ports(ref.ports)
-    c.auto_rename_ports()
-    c.flatten()
-    return c
+    pass
 
 
 taper_electrical = partial(

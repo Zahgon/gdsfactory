@@ -114,19 +114,7 @@ def import_gds_with_conflicts(
     gdspath: str | Path,
     cellname: str | None = None,
 ) -> Component:
-    """Reads a GDS file and returns a Component.
-
-    Args:
-        gdspath: path to GDS file.
-        cellname: name of the cell to return. Defaults to top cell.
-
-    Modes:
-        AddToCell: Add content to existing cell. Content of new cells is simply added to existing cells with the same name.
-        OverwriteCell: The old cell is overwritten entirely (including child cells which are not used otherwise)
-        RenameCell: The new cell will be renamed to become unique
-        SkipNewCell: The new cell is skipped entirely (including child cells which are not used otherwise)
-    """
-    return import_gds(gdspath, cellname=cellname, rename_duplicated_cells=True)
+    pass
 
 
 def import_gds_multiple_top_cells(
@@ -172,7 +160,6 @@ def import_gds_multiple_top_cells(
         kcells = temp_kcl.layout.top_cells()
 
         if cellnames is not None:
-            # Validate provided cellnames and surface all invalid names at once
             available_cellnames = {kcell.name for kcell in kcells}
             missing = set(cellnames) - available_cellnames
             if missing:
@@ -182,7 +169,6 @@ def import_gds_multiple_top_cells(
                     + ".\n"
                     + f"Available top cells: {sorted(available_cellnames)}"
                 )
-            # Filter kcells to include only those specified in cellnames
             kcells = [kcell for kcell in kcells if kcell.name in cellnames]
 
         for kcell in kcells:

@@ -21,37 +21,4 @@ def ring_single_array(
     list_of_dicts: tuple[dict[str, Any], ...] | None = None,
     cross_section: CrossSectionSpec = "strip",
 ) -> Component:
-    """Ring of single bus connected with straights.
-
-    Args:
-        ring: ring spec.
-        spacing: between rings.
-        list_of_dicts: settings for each ring.
-        cross_section: spec.
-
-           ______               ______
-          |      |             |      |
-          |      |  length_y   |      |
-          |      |             |      |
-         --======-- spacing ----==gap==--
-
-          length_x
-    """
-    list_of_dicts = list_of_dicts or _list_of_dicts
-    c = Component()
-    settings0 = list_of_dicts[0]
-    ring1 = c << gf.get_component(ring, cross_section=cross_section, **settings0)
-
-    ring0 = ring1
-    wg = gf.c.straight(length=spacing, cross_section=cross_section)
-
-    for settings in list_of_dicts[1:]:
-        ringi = c << gf.get_component(ring, cross_section=cross_section, **settings)
-        wgi = c << wg
-        wgi.connect("o1", ring0.ports["o2"])
-        ringi.connect("o1", wgi.ports["o2"])
-        ring0 = ringi
-
-    c.add_port("o1", port=ring1.ports["o1"])
-    c.add_port("o2", port=ringi.ports["o2"])
-    return c
+    pass

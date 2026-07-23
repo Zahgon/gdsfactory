@@ -1,4 +1,3 @@
-"""Cross-section utility functions, factories, and registration."""
 
 from __future__ import annotations
 
@@ -49,10 +48,7 @@ def xsection[**P](
 
     @wraps(func)
     def newfunc(*args: P.args, **kwargs: P.kwargs) -> CrossSection:
-        xs = func(*args, **kwargs)
-        if xs.name in xs_default_mapping:
-            xs._name = xs_default_mapping[xs.name]
-        return xs
+        pass
 
     xs_container[func.__name__] = newfunc
     return newfunc
@@ -250,12 +246,10 @@ def is_cross_section(name: str, obj: Any, verbose: bool = False) -> bool:
     if name.startswith("_"):
         return False
 
-    # Early prune: only consider functions, builtins or partials
     func: FunctionType | BuiltinFunctionType | None = None
     if isfunction(obj) or isbuiltin(obj):
         func = obj
     elif isinstance(obj, partial):
-        # Check if the underlying function is a function or builtin
         if isfunction(obj.func) or isbuiltin(obj.func):
             func = obj.func
         else:
@@ -263,16 +257,12 @@ def is_cross_section(name: str, obj: Any, verbose: bool = False) -> bool:
     else:
         return False
 
-    # Ensure func is not None for type checker
     if func is None:
         return False
 
-    # Check if function is registered in the cross_sections dictionary
-    # This happens when decorated with @xsection
     if name in cross_sections and cross_sections[name] is obj:
         return True
 
-    # Fallback: check return type annotation
     try:
         ann = getattr(func, "__annotations__", {})
         return_type = ann.get("return")
@@ -280,9 +270,7 @@ def is_cross_section(name: str, obj: Any, verbose: bool = False) -> bool:
         if return_type is None:
             return False
 
-        # Handle string annotations and forward references
         if isinstance(return_type, str):
-            # Handle simple string matches
             if return_type in (
                 "CrossSection",
                 "gf.CrossSection",
@@ -290,19 +278,15 @@ def is_cross_section(name: str, obj: Any, verbose: bool = False) -> bool:
             ):
                 return True
 
-            # For other string annotations, try to resolve them in the function's context
             try:
-                # Try globals first
                 func_globals = getattr(func, "__globals__", {})
                 resolved_type = func_globals.get(return_type)
 
-                # If not in globals, try closure variables
                 if (
                     resolved_type is None
                     and hasattr(func, "__closure__")
                     and func.__closure__
                 ):
-                    # Get the names of closure variables
                     if hasattr(func, "__code__") and hasattr(
                         func.__code__, "co_freevars"
                     ):
@@ -326,16 +310,13 @@ def is_cross_section(name: str, obj: Any, verbose: bool = False) -> bool:
 
             return False
 
-        # Direct type comparison
         if return_type is CrossSection:
             return True
 
-        # Check if it's a subclass of CrossSection
         if isinstance(return_type, type):
             try:
                 return issubclass(return_type, CrossSection)
             except TypeError:
-                # Handle cases where return_type is not a class
                 return False
 
     except Exception as e:
@@ -354,7 +335,6 @@ def get_cross_sections(
         modules: module or iterable of modules.
         verbose: prints in case any errors occur.
     """
-    # Optimize module input normalization and preallocate xs
     if isinstance(modules, Sequence) and not isinstance(modules, str):
         modules_ = modules
     else:
@@ -370,4 +350,3 @@ def get_cross_sections(
     return xs
 
 
-# cross_sections = get_cross_sections(sys.modules[__name__])

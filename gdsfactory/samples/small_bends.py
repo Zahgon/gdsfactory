@@ -43,23 +43,11 @@ def _smooth_path(
     width: float,
     radius: float,
 ) -> gf.Component:
-    path = gf.path.smooth(points=np.array(points), radius=radius, bend=gf.path.euler)
-    section = gf.Section(width=width, offset=0.0, layer=_LAYER, port_names=(None, None))
-    return gf.path.extrude(path, gf.CrossSection(sections=(section,)))
+    pass
 
 
 def _main() -> None:
-    label = sys.argv[1] if len(sys.argv) > 1 else "out"
-    out = gf.Component()
-    for index, (points, width, radius) in enumerate(_CALLS):
-        ref = out.add_ref(_smooth_path(points, width, radius))
-        ref.ymin = 0.0
-        ref.dmove((index * 10.0, 0.0))
-
-    Path("breakage_artifacts").mkdir(exist_ok=True)
-    out.write_gds(f"breakage_artifacts/mwe_round_{label}.gds")
-    print(f"gdsfactory={gf.__version__}  wrote mwe_round_{label}.gds")
-    out.show()
+    pass
 
 
 if __name__ == "__main__":

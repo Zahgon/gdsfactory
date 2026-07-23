@@ -1,8 +1,3 @@
-"""Preset cross-section factory functions.
-
-Includes strip, rib, slot, nitride, metal, and other standard waveguide
-cross-sections.
-"""
 
 from __future__ import annotations
 

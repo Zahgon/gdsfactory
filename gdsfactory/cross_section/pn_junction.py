@@ -1,4 +1,3 @@
-"""P-N junction and doped waveguide cross-section factories."""
 
 from __future__ import annotations
 
@@ -635,7 +634,6 @@ def pn_with_trenches_asymmetric(
     if slab_offset is not None:
         width_slab = width + 2 * width_trench + 2 * slab_offset
 
-    # Trenches
     trench_offset = width / 2 + width_trench / 2
     section_list: list[Section] = list(sections or [])
     assert width_slab is not None
@@ -648,7 +646,6 @@ def pn_with_trenches_asymmetric(
     if wg_marking_layer is not None:
         section_list += [Section(width=width, offset=0, layer=wg_marking_layer)]
 
-    # Low doping
 
     if not isinstance(gap_low_doping, list | tuple):
         gap_low_doping_list = [gap_low_doping] * 2
@@ -1111,7 +1108,6 @@ def pn_ge_detector_si_contacts(
         )
         section_list.extend((metal_top, metal_bot))
 
-    # Add the Ge
     s = Section(width=width_ge, offset=0, layer=layer_ge)
     section_list.append(s)
 

@@ -1,8 +1,3 @@
-"""Sample path length matching with loops at the center.
-
-Places delay loops in the center of the route, on both sides (center loop_side),
-matching to the second route (element=1).
-"""
 
 from __future__ import annotations
 
@@ -39,12 +34,6 @@ if __name__ == "__main__":
     ]
 
     c = gf.Component()
-    # Path length matching can be requested in two equivalent ways:
-    #   1. the ``path_length_matching_config`` convenience dict, or
-    #   2. passing kfactory constraints directly via ``constraints`` (shown below).
-    # The two are mutually exclusive, so pick one. Here we build the constraint
-    # explicitly, which lets you combine several constraints or tune fields not
-    # exposed by the convenience dict.
     gf.routing.route_bundle(
         c,
         start_ports,

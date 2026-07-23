@@ -1,4 +1,3 @@
-"""You can remove a list of layers from a component."""
 
 from __future__ import annotations
 

@@ -1,4 +1,3 @@
-"""Small demonstration of the cross_section copy."""
 
 from __future__ import annotations
 

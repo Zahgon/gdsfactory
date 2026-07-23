@@ -1,12 +1,3 @@
-"""Add_pin adds a Pin to a port, add_pins adds Pins to all ports.
-
-- pins
-- outline
-
-Some functions modify a component without changing its name.
-Make sure these functions are inside a new Component or called as a decorator
-They without modifying the cell name
-"""
 
 from __future__ import annotations
 
@@ -35,8 +26,7 @@ def _rotate(
     vector: npt.NDArray[np.floating[Any]],
     rotation_matrix: npt.NDArray[np.floating[Any]],
 ) -> npt.NDArray[np.floating[Any]]:
-    """Rotate a vector by a rotation matrix."""
-    return rotation_matrix @ vector
+    pass
 
 
 def add_bbox(
@@ -77,67 +67,13 @@ def add_bbox_siepic(
     bbox_layer: typings.LayerSpec = "DEVREC",
     remove_layers: typings.LayerSpecs = ("PORT", "PORTE"),
 ) -> Component:
-    """Add bounding box device recognition layer.
-
-    Args:
-        component: to add bbox.
-        bbox_layer: bounding box.
-        remove_layers: remove other layers.
-    """
-    from gdsfactory.pdk import get_layer
-
-    bbox_layer = get_layer(bbox_layer)
-    remove_layers = remove_layers or []
-    remove_layers = list(remove_layers) + [bbox_layer]
-    remove_layers = [get_layer(layer) for layer in remove_layers]
-    component = component.remove_layers(layers=remove_layers, recursive=False)
-
-    if bbox_layer:
-        component.add_padding(default=0, layers=(bbox_layer,))
-    return component
+    pass
 
 
 def get_pin_triangle_polygon_tip(
     port: typings.Port,
 ) -> tuple[npt.NDArray[np.floating[Any]], tuple[float, float]]:
-    """Returns triangle polygon and tip position."""
-    p = port
-    port_face = p.info.get("face", None)
-
-    orientation_rad = p.orientation * (np.pi / 180)
-    ca = np.cos(orientation_rad)
-    sa = np.sin(orientation_rad)
-    rot00, rot01, rot10, rot11 = ca, -sa, sa, ca  # Precompute for single-use
-
-    d = float(p.width) * 0.5  # Always use float for NumPy math
-    cx, cy = p.center[0], p.center[1]  # p.center is typically sequence
-
-    if port_face:
-        dtop = port_face[0]
-        dbot = port_face[-1]
-        dbotx, dboty = dbot[0], dbot[1]
-        dtopx, dtopy = dtop[0], dtop[1]
-    else:
-        dbotx, dboty = 0.0, -d
-        dtopx, dtopy = 0.0, d
-
-    # Apply the rotation and translation inline
-    p0x = cx + rot00 * dbotx + rot01 * dboty
-    p0y = cy + rot10 * dbotx + rot11 * dboty
-    p1x = cx + rot00 * dtopx + rot01 * dtopy
-    p1y = cy + rot10 * dtopx + rot11 * dtopy
-
-    # Tip: dtip = (d,0)
-    ptipx = cx + rot00 * d
-    ptipy = cy + rot10 * d
-
-    # Stack all points into a single array, no object dtype, no extra function calls
-    polygon_stacked = np.array(
-        [[p0x, p0y], [p1x, p1y], [ptipx, ptipy]], dtype=np.float64
-    )
-
-    ptip: tuple[float, float] = (ptipx, ptipy)
-    return polygon_stacked, ptip
+    pass
 
 
 def add_pin_triangle(
@@ -146,23 +82,7 @@ def add_pin_triangle(
     layer: typings.LayerSpec = "PORT",
     layer_label: typings.LayerSpec | None = "TEXT",
 ) -> None:
-    """Add triangle pin with a right angle, pointing out of the port.
-
-    Args:
-        component: to add pin.
-        port: Port.
-        layer: for the pin marker.
-        layer_label: for the label.
-    """
-    polygon, ptip = get_pin_triangle_polygon_tip(port=port)
-    component.add_polygon(polygon, layer=layer)
-
-    if layer_label:
-        component.add_label(
-            text=str(port.name),
-            position=ptip,
-            layer=layer_label,
-        )
+    pass
 
 
 def add_pin_rectangle_inside(
@@ -172,39 +92,7 @@ def add_pin_rectangle_inside(
     layer: typings.LayerSpec = "PORT",
     layer_label: typings.LayerSpec | None = "TEXT",
 ) -> None:
-    """Add square pin towards the inside of the port.
-
-    Args:
-        component: to add pins.
-        port: Port.
-        pin_length: length of the pin marker for the port.
-        layer: layer to place the pin rectangle on.
-        layer_label: layer to place the text label on.
-
-           _______________
-          |               |
-          |               |
-          |               |
-          ||              |
-          ||              |
-          |               |
-          |      __       |
-          |_______________|
-    """
-    if layer:
-        p = port
-        poly = gf.kdb.DPolygon(
-            gf.kdb.DBox(-pin_length, -p.width / 2, 0, p.width / 2)
-        ).transform(p.dcplx_trans)
-        component.shapes(gf.get_layer(layer)).insert(poly)
-
-    if layer_label:
-        assert port.name is not None
-        component.add_label(
-            text=port.name,
-            position=port.center,
-            layer=layer_label,
-        )
+    pass
 
 
 def add_pin_rectangle(
@@ -215,40 +103,7 @@ def add_pin_rectangle(
     layer_label: typings.LayerSpec | None = "TEXT",
     port_margin: float = 0.0,
 ) -> None:
-    """Add half out pin to a component.
-
-    Args:
-        component: to add pin.
-        port: Port.
-        pin_length: length of the pin marker for the port.
-        layer: for the pin marker.
-        layer_label: for the label.
-        port_margin: margin to port edge.
-
-           _______________
-          |               |
-          |               |
-          |               |
-         |||              |
-         |||              |
-          |               |
-          |      __       |
-          |_______________|
-                 __
-    """
-    if layer:
-        width = port.width + port_margin
-        poly = gf.kdb.DPolygon(
-            gf.kdb.DBox(-pin_length / 2, -width / 2, +pin_length / 2, width / 2)
-        ).transform(port.dcplx_trans)
-        component.shapes(gf.get_layer(layer)).insert(poly)
-
-    if layer_label:
-        component.add_label(
-            text=str(port.name),
-            position=port.center,
-            layer=layer_label,
-        )
+    pass
 
 
 class AddPinPathFunction(Protocol):
@@ -269,53 +124,7 @@ def add_pin_path(
     layer: typings.LayerSpec = "PORT",
     layer_label: typings.LayerSpec | None = None,
 ) -> None:
-    """Add half out path pin to a component.
-
-    This port type is compatible with SiEPIC pdk.
-
-    Args:
-        component: to add pin.
-        port: Port.
-        pin_length: length of the pin marker for the port.
-        layer: for the pin marker.
-        layer_label: optional layer label. Defaults to layer.
-
-           _______________
-          |               |
-          |               |
-          |               |
-         |||              |
-         |||              |
-          |               |
-          |      __       |
-          |_______________|
-                 __
-    """
-    from gdsfactory.pdk import get_layer
-
-    layer_label = layer_label or layer
-    p = port
-    a = p.orientation
-    ca = np.cos(a * np.pi / 180)
-    sa = np.sin(a * np.pi / 180)
-    rot_mat = np.array([[ca, -sa], [sa, ca]])
-
-    d0 = np.array([-pin_length / 2, 0])
-    d1 = np.array([+pin_length / 2, 0])
-
-    p0 = p.center + _rotate(d0, rot_mat)
-    p1 = p.center + _rotate(d1, rot_mat)
-
-    points = [p0, p1]
-    dpoints = [kf.kdb.DPoint(p[0], p[1]) for p in points]
-    layer = get_layer(layer)
-
-    dpath = kf.kdb.DPath(
-        dpoints,
-        p.width,
-    )
-    component.add_label(text=str(p.name), position=p.center, layer=layer_label)
-    component.shapes(layer).insert(dpath)
+    pass
 
 
 def add_outline(
@@ -324,28 +133,7 @@ def add_outline(
     layer: typings.LayerSpec = "DEVREC",
     **kwargs: Any,
 ) -> None:
-    """Adds devices outline bounding box in layer.
-
-    Args:
-        component: where to add the markers.
-        reference: to read outline from.
-        layer: to add padding.
-        kwargs: padding settings.
-
-    Keyword Args:
-        default: default padding.
-        top: North padding.
-        bottom: padding.
-        right: padding.
-        left: padding.
-    """
-    from gdsfactory.add_padding import get_padding_points
-
-    c = reference or component
-    if hasattr(component, "parent"):
-        component = component.parent
-    points = get_padding_points(component=c, default=0, **kwargs)
-    component.add_polygon(points, layer=layer)
+    pass
 
 
 def add_pins_siepic(
@@ -356,33 +144,7 @@ def add_pins_siepic(
     pin_length: float = 10 * nm,
     **kwargs: Any,
 ) -> Component:
-    """Add pins.
-
-    Enables you to run SiEPIC verification tools:
-    To Run verification install SiEPIC-tools KLayout package
-    then hit V shortcut in KLayout to run verification
-
-    - ensure no disconnected pins
-    - netlist extraction
-
-    Args:
-        component: to add pins.
-        function: to add pin.
-        port_type: optical, electrical, ...
-        layer: pin layer.
-        pin_length: length of the pin marker for the port.
-        kwargs: add pins function settings.
-    """
-    from gdsfactory.pdk import get_component
-
-    component = get_component(component)
-
-    for p in component.get_ports_list(port_type=port_type):
-        function(
-            component=component, port=p, layer=layer, pin_length=pin_length, **kwargs
-        )
-
-    return component
+    pass
 
 
 add_pins_siepic_optical = add_pins_siepic
@@ -420,7 +182,6 @@ def add_pins(
 
     component = get_component(component)
 
-    # This should only select ports according to the port type
     ports = select_ports(
         ports=cast(typings.Ports, component.ports),
         port_type=port_type,
@@ -452,35 +213,7 @@ def add_settings_label(
     layer_label: typings.LayerSpec = "LABEL_SETTINGS",
     with_yaml_format: bool = False,
 ) -> None:
-    """Add settings in label.
-
-    Args:
-        component: to add pins.
-        reference: ComponentReference.
-        layer_label: layer spec.
-        with_yaml_format: add yaml format, False uses json.
-    """
-    from gdsfactory.pdk import get_layer
-
-    layer_label = get_layer(layer_label)
-
-    reference_or_component = reference or component
-    info = (
-        reference_or_component.cell.info
-        if hasattr(reference_or_component, "cell")
-        else reference_or_component.info
-    )
-    settings_dict = dict(info)
-    settings_string = (
-        yaml.safe_dump(settings_dict)
-        if with_yaml_format
-        else f"settings={json.dumps(settings_dict)}"
-    )
-    if len(settings_string) > 1024:
-        raise ValueError(f"label > 1024 characters: {settings_string}")
-    component.add_label(
-        position=reference_or_component.center, text=settings_string, layer=layer_label
-    )
+    pass
 
 
 def add_instance_label(
@@ -538,24 +271,7 @@ def add_pins_and_outline(
     add_settings_function: AddInstanceLabelFunction | None = add_settings_label,
     add_instance_label_function: AddInstanceLabelFunction | None = add_settings_label,
 ) -> None:
-    """Add pins component outline.
-
-    Args:
-        component: where to add the markers.
-        reference: to add pins.
-        add_outline_function: to add outline around the component.
-        add_pins_function: to add pins to ports.
-        add_settings_function: to add outline around the component.
-        add_instance_label_function: labels each instance.
-    """
-    if add_outline_function:
-        add_outline_function(component=component, reference=reference)
-    if add_pins_function:
-        add_pins_function(component, reference)
-    if add_settings_function:
-        add_settings_function(component=component, reference=reference)
-    if add_instance_label_function:
-        add_instance_label_function(component=component, reference=reference)
+    pass
 
 
 add_pins_container = partial(container, function=add_pins)

@@ -1,4 +1,3 @@
-"""Sample routing with steps."""
 
 from __future__ import annotations
 

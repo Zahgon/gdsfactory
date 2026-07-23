@@ -1,4 +1,3 @@
-"""Read component from a numpy.ndarray."""
 
 from __future__ import annotations
 
@@ -84,13 +83,11 @@ def from_image(image_path: PathType, **kwargs: Any) -> Component:
     """
     import matplotlib.pyplot as plt
 
-    # Load the image using matplotlib
     img = plt.imread(image_path)
 
     if len(img.shape) == 3:
         img = 0.2989 * img[:, :, 0] + 0.5870 * img[:, :, 1] + 0.1140 * img[:, :, 2]
 
-    # Convert image to numpy array (in fact, plt.imread already returns a numpy array)
     img_array = np.array(img)
 
     return from_np(img_array, **kwargs)

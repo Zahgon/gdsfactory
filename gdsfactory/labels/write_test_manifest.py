@@ -1,4 +1,3 @@
-"""Converts CSV of test site labels into a CSV test manifest."""
 
 import csv
 import json

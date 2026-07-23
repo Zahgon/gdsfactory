@@ -1,4 +1,3 @@
-"""Containers are components that contain other components."""
 
 from gdsfactory.add_padding import add_padding_to_size, add_padding_to_size_container
 from gdsfactory.components import (

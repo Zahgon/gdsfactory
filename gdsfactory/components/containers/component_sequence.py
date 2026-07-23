@@ -51,7 +51,7 @@ class SequenceGenerator:
         self.repeated_sequence = repeated_sequence
 
     def get_sequence(self, n: int = 2) -> str:
-        return self.start_sequence + n * self.repeated_sequence + self.end_sequence
+        pass
 
 
 def parse_component_name(name: str) -> tuple[str, bool]:
@@ -129,7 +129,6 @@ def component_sequence(
     named_references_counter: Counter[str] = Counter()
     component = Component()
 
-    # Add first component reference and input port
     symbol = sequence[0] if "!" not in sequence[0] else sequence[:2]
     index = 2 if "!" in sequence[0] else 1
     name_start_device, do_flip = parse_component_name(symbol)
@@ -157,7 +156,6 @@ def component_sequence(
         s = sequence[index]
 
         if s == "!":
-            # if it's the last character skip
             if index + 1 >= len(sequence):
                 index += 1
                 continue
@@ -188,7 +186,6 @@ def component_sequence(
         prev_device = ref
         prev_port = next_port
 
-    # Deal with edge case where the sequence contains only one component
     if len(sequence) == 1:
         ref = prev_device
         next_port = prev_port
@@ -198,7 +195,6 @@ def component_sequence(
 
     component.add_port(name=port_name2, port=ref.ports[next_port])
 
-    # Add any extra port specified in ports_map
     for name, (ref_name, alias_port_name) in ports_map.items():
         component.add_port(
             name=name, port=component.insts[ref_name].ports[alias_port_name]

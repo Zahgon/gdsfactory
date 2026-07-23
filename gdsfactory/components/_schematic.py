@@ -1,4 +1,3 @@
-"""Reusable schematic function factories for common photonic port patterns."""
 
 from __future__ import annotations
 
@@ -7,35 +6,22 @@ from typing import Any, Literal, cast
 
 from kfactory.schematic import DSchematic
 
-# Port pattern: 2-port horizontal (straight, bend, taper, etc.)
-# o1 ────── o2
 _LEFT_RIGHT = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "right", "type": "photonic"},
 ]
 
-# Port pattern: 2-port bend (90-degree turn)
-# o1 ──┐
-#      o2
 _LEFT_BOTTOM = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "bottom", "type": "photonic"},
 ]
 
-# Port pattern: 1x2 splitter
-#        ── o2
-# o1 ──┤
-#        ── o3
 _1X2 = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "right", "type": "photonic"},
     {"name": "o3", "side": "right", "type": "photonic"},
 ]
 
-# Port pattern: 2x2 coupler
-# o2 ──┐  ┌── o3
-#      ├──┤
-# o1 ──┘  └── o4
 _2X2 = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "left", "type": "photonic"},
@@ -43,7 +29,6 @@ _2X2 = [
     {"name": "o4", "side": "right", "type": "photonic"},
 ]
 
-# Port pattern: ring coupler (bus below, ring above)
 _COUPLER_RING = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "top", "type": "photonic"},
@@ -51,7 +36,6 @@ _COUPLER_RING = [
     {"name": "o4", "side": "right", "type": "photonic"},
 ]
 
-# Port pattern: 4-port crossing
 _CROSSING = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "bottom", "type": "photonic"},
@@ -59,24 +43,20 @@ _CROSSING = [
     {"name": "o4", "side": "top", "type": "photonic"},
 ]
 
-# Port pattern: 1-port terminator
 _TERMINATOR = [
     {"name": "o1", "side": "left", "type": "photonic"},
 ]
 
-# Port pattern: grating coupler (waveguide left, fiber top)
 _GRATING = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "top", "type": "photonic"},
 ]
 
-# Port pattern: 2-port with electrical contacts (modulators, heaters)
 _MODULATOR = [
     {"name": "o1", "side": "left", "type": "photonic"},
     {"name": "o2", "side": "right", "type": "photonic"},
 ]
 
-# Port pattern: photodiode (optical in, electrical out)
 _PHOTODIODE = [
     {"name": "o1", "side": "left", "type": "photonic"},
 ]
@@ -99,7 +79,6 @@ def _make_schematic(
         "bottom": (0, -1, 270),
     }
 
-    # Pre-count ports per side for centering
     side_counts: dict[str, int] = {}
     for port in ports:
         side_counts[port["side"]] = side_counts.get(port["side"], 0) + 1
@@ -113,7 +92,6 @@ def _make_schematic(
         total = side_counts[side]
         bx, by, orientation = side_to_xy[side]
 
-        # Center multiple ports on the same side
         offset = (idx - (total - 1) / 2) * spacing
         if side in ("left", "right"):
             x, y = float(bx), by + offset
@@ -140,12 +118,11 @@ def schematic(
     """Returns a schematic function for use with @gf.cell(schematic_function=...)."""
 
     def _schematic_fn(**kwargs: Any) -> DSchematic:
-        return _make_schematic(symbol, tags, ports)
+        pass
 
     return _schematic_fn
 
 
-# Pre-built schematic functions for common patterns
 straight_schematic = schematic("straight", ["waveguide"], _LEFT_RIGHT)
 bend_schematic = schematic("bend", ["bend"], _LEFT_BOTTOM)
 sbend_schematic = schematic("sbend", ["bend", "s"], _LEFT_RIGHT)

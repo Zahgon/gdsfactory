@@ -32,10 +32,7 @@ def support_nets(func: RoutingStrategy) -> RoutingStrategy:
         ports2: Ports | None = None,
         **kwargs: object,
     ) -> Sequence[Route]:
-        if nets is not None:
-            ports1 = [net[0] for net in nets]
-            ports2 = [net[1] for net in nets]
-        return func(component, ports1=ports1, ports2=ports2, **kwargs)
+        pass
 
     return wrapper
 

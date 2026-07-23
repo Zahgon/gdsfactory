@@ -1,4 +1,3 @@
-"""You can define a function to add pins."""
 
 import gdsfactory as gf
 

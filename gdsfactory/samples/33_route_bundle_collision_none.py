@@ -1,4 +1,3 @@
-"""Route bundle with on_collision=None for tight port spacing."""
 
 from __future__ import annotations
 

@@ -20,20 +20,7 @@ def strip3(
     offset_sides: float = 65,
     **kwargs: Any,
 ) -> CrossSection:
-    sections = (
-        gf.Section(layer=layer_sides, width=width_sides, offset=offset_sides),
-        gf.Section(layer=layer_sides, width=width_sides, offset=-offset_sides),
-        gf.Section(layer=layer_cover, width=width_cover, offset=0),
-    )
-
-    return cross_section(
-        width=width,
-        layer=layer,
-        radius=radius,
-        radius_min=radius_min,
-        sections=sections,
-        **kwargs,
-    )
+    pass
 
 
 if __name__ == "__main__":

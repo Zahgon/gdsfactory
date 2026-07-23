@@ -1,4 +1,3 @@
-"""Sample GS routing."""
 
 from __future__ import annotations
 

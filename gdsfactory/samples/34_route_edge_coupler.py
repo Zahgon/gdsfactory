@@ -1,4 +1,3 @@
-"""Sample reticle with MZIs and edge couplers."""
 
 from __future__ import annotations
 

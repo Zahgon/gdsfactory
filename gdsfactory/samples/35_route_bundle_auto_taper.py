@@ -1,4 +1,3 @@
-"""Route bundle with auto_taper to match port widths to cross-section width."""
 
 from __future__ import annotations
 

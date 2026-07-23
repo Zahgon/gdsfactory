@@ -1,4 +1,3 @@
-"""Route bundle using S-bends for tight port spacing where Manhattan routing fails."""
 
 from __future__ import annotations
 

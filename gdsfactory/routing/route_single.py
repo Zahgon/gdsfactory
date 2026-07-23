@@ -1,29 +1,3 @@
-"""`route_single` places a Manhattan route between two ports.
-
-`route_single` only works for an individual routes. For routing groups of ports you need to use `route_bundle` instead
-
-To make a route, you need to supply:
-
- - input port
- - output port
- - bend
- - straight
- - taper to taper to wider straights and reduce straight loss (Optional)
-
-To generate a route:
-
- 1. Generate the backbone of the route.
- This is a list of manhattan coordinates that the route would pass through
- if it used only sharp bends (right angles)
-
- 2. Replace the corners by bend references
- (with rotation and position computed from the manhattan backbone)
-
- 3. Add tapers if needed and if space permits
-
- 4. generate straight portions in between tapers or bends
-
-"""
 
 from __future__ import annotations
 
@@ -141,7 +115,7 @@ def route_single(
         return gf.get_component(straight, length=length, **kwargs)
 
     def straight_dbu(width: int, length: int, **kwargs: Any) -> gf.Component:
-        return straight_(c.kcl.to_um(width), c.kcl.to_um(length), **kwargs)
+        pass
 
     if steps and waypoints:
         raise ValueError("Provide only one of steps or waypoints")
@@ -209,7 +183,6 @@ def route_single(
                 route_width=c.kcl.to_dbu(width),
             )
         except Exception as e:
-            # error_route((ps, pe, router.start.pts, router.width))
             ps = p1
             pe = p2
             c = component

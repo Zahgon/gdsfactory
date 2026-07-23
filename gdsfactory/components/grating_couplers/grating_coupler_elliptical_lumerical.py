@@ -84,67 +84,7 @@ def grating_coupler_elliptical_lumerical(
     bias_gap: float = 0,
     cross_section: CrossSectionSpec = "strip",
 ) -> Component:
-    """Returns a grating coupler from lumerical inverse design 3D optimization.
-
-    this is a wrapper of components.grating_coupler_elliptical_arbitrary
-    https://support.lumerical.com/hc/en-us/articles/1500000306621
-    https://support.lumerical.com/hc/en-us/articles/360042800573
-
-    Here are the simulation settings used in lumerical
-
-        n_bg=1.44401 #Refractive index of the background material (cladding)
-        wg=3.47668   # Refractive index of the waveguide material (core)
-        lambda0=1550e-9
-        bandwidth = 0e-9
-        polarization = 'TE'
-        wg_width=500e-9 # Waveguide width
-        wg_height=220e-9 # Waveguide height
-        etch_depth=80e-9 # etch depth
-        theta_fib_mat = 5 # Angle of the fiber mode in material
-        theta_taper=30
-        efficiency=0.55 # 5.2 dB
-
-    Args:
-        parameters: xinput, gap1, width1, gap2, width2 ...
-        layer: for waveguide.
-        layer_slab: for slab.
-        taper_angle: in deg.
-        taper_length: in um.
-        fiber_angle: used to compute ellipticity.
-        info: optional simulation settings.
-        bias_gap: gap/trenches bias (um) to compensate for etching bias.
-
-    Keyword Args:
-        taper_length: taper length from input in um.
-        taper_angle: grating flare angle in degrees.
-        wavelength: grating transmission central wavelength (um).
-        fiber_angle: fibre angle in degrees determines ellipticity.
-        neff: tooth effective index.
-        nclad: cladding effective index.
-        polarization: te or tm.
-        spiked: grating teeth include sharp spikes to avoid non-manhattan drc errors.
-        cross_section: cross_section spec for waveguide port.
-    """
-    parameters = tuple(parameters)
-    xinput = parameters[0]
-    teeth_list = parameters[1:]
-    gaps = teeth_list[::2]
-    widths = teeth_list[1::2]
-    info = info or {}
-    gaps = tuple(gap + bias_gap for gap in gaps)
-
-    c = grating_coupler_elliptical_arbitrary(
-        gaps=gaps,
-        widths=widths,
-        taper_angle=taper_angle,
-        taper_length=taper_length,
-        layer_slab=layer_slab,
-        fiber_angle=fiber_angle,
-        cross_section=cross_section,
-    )
-    c.info.update(info)
-    c.info["xinput"] = xinput
-    return c
+    pass
 
 
 grating_coupler_elliptical_lumerical_etch70 = partial(

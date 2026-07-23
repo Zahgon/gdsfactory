@@ -32,14 +32,10 @@ def split_default_settings_from_yaml(yaml_lines: list[str]) -> tuple[str, str]:
     """
     settings_lines: list[str] = []
     other_lines: list[str] = []
-    # start reading all lines
     while yaml_lines:
-        # pop lines until we find the default_settings block
         line = yaml_lines.pop(0)
         if line.startswith("default_settings"):
             settings_lines.append(line)
-            # keep adding lines to settings until we find a new top-level block...
-            # then we will add the rest of the lines to the main file block
             while yaml_lines:
                 next_line = yaml_lines.pop(0)
                 if next_line[0].isspace():
@@ -141,10 +137,7 @@ def yaml_cell(
     default_settings = get_default_settings_dict(default_settings_def)
 
     def _yaml_func(**kwargs: Any) -> Component:
-        evaluated_text = _evaluate_yaml_template(yaml_body, default_settings, kwargs)
-        return _pic_from_templated_yaml(
-            evaluated_text, name, routing_strategies=routing_strategies
-        )
+        pass
 
     sig = signature(_yaml_func)
     params = []

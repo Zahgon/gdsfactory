@@ -1,11 +1,3 @@
-"""FileWatcher based on watchdog. Looks for changes in files with .pic.yml extension.
-
-Security Warning:
-    This module uses exec() to dynamically execute Python files found in watched
-    directories. Only watch directories that contain trusted code. Files executed
-    via the watcher run with the full privileges of the Python interpreter. Consider
-    using the ``allowed_dirs`` parameter to restrict execution to known-safe directories.
-"""
 
 from __future__ import annotations
 
@@ -46,7 +38,6 @@ type _ModifiedEvent = DirModifiedEvent | FileModifiedEvent
 
 
 class FileWatcher(FileSystemEventHandler):
-    """Captures *.py or *.pic.yml file change events."""
 
     def __init__(
         self,
@@ -94,16 +85,10 @@ class FileWatcher(FileSystemEventHandler):
         self.thread.start()
 
     def run(self) -> None:
-        while not self.stopping.is_set():
-            if not self.observer.is_alive():
-                self.observer.start()
-            time.sleep(1)
-        self.observer.stop()
-        self.observer.join()
+        pass
 
     def stop(self) -> None:
-        self.stopping.set()
-        self.thread.join()
+        pass
 
     def update_cell(self, src_path: PathType, update: bool = False) -> ComponentFactory:
         """Parses a YAML file to a cell function and registers into active pdk.
@@ -127,59 +112,19 @@ class FileWatcher(FileSystemEventHandler):
         return function
 
     def _get_path(self, path: str | bytes) -> str:
-        return path.decode("utf-8") if isinstance(path, bytes) else path
+        pass
 
     def on_moved(self, event: _MovedEvent) -> None:
-        super().on_moved(event)
-
-        what = "directory" if event.is_directory else "file"
-        dest_path = self._get_path(event.dest_path)
-
-        if what == "file" and dest_path.endswith(".pic.yml"):
-            self.logger.info("Moved %s: %s", what, dest_path)
-            self.update_cell(dest_path)
-            self.get_component(dest_path)
+        pass
 
     def on_created(self, event: _CreatedEvent) -> None:
-        super().on_created(event)
-
-        what = "directory" if event.is_directory else "file"
-        src_path = self._get_path(event.src_path)
-        if (what == "file" and src_path.endswith(".pic.yml")) or src_path.endswith(
-            ".py"
-        ):
-            self.logger.info("Created %s: %s", what, src_path)
-            self.get_component(src_path)
+        pass
 
     def on_deleted(self, event: _DeletedEvent) -> None:
-        super().on_deleted(event)
-
-        what = "directory" if event.is_directory else "file"
-        src_path = self._get_path(event.src_path)
-
-        if what == "file" and src_path.endswith(".pic.yml"):
-            self.logger.info("Deleted %s: %s", what, event.src_path)
-            pdk = get_active_pdk()
-            filepath = pathlib.Path(src_path)
-            cell_name = filepath.stem.split(".")[0]
-            pdk.remove_cell(cell_name)
+        pass
 
     def on_modified(self, event: _ModifiedEvent) -> None:
-        super().on_modified(event)
-
-        # Determine file type
-        what = "directory" if event.is_directory else "file"
-        if not isinstance(event.src_path, str):
-            src_path = event.src_path.decode("utf-8")
-        else:
-            src_path = event.src_path
-
-        # Check if the file matches the extensions we care about
-        if what == "file" and (src_path.endswith((".pic.yml", ".py"))):
-            self.logger.info("Modified %s: %s", what, src_path)
-            self.get_component(src_path)
-        else:
-            print(f"Ignored {what}: {src_path}")
+        pass
 
     def _is_allowed_path(self, filepath: pathlib.Path) -> bool:
         """Check if a file path is within the allowed directories.
@@ -225,7 +170,6 @@ class FileWatcher(FileSystemEventHandler):
             dirpath = pathlib.Path(dirpath_str) / "build" / "gds"
             dirpath.mkdir(parents=True, exist_ok=True)
 
-            # Create .gitignore in build directory to ignore all contents
             gitignore_path = pathlib.Path(dirpath_str) / "build" / ".gitignore"
             if not gitignore_path.exists():
                 gitignore_path.write_text("*\n")
@@ -234,7 +178,6 @@ class FileWatcher(FileSystemEventHandler):
                 if str(filepath).endswith(".pic.yml"):
                     return self.get_component_yaml(filepath, dirpath)
                 if str(filepath).endswith(".py"):
-                    # Check allowed directories
                     if not self._is_allowed_path(filepath):
                         self.logger.error(
                             "Rejected file %s: not in allowed directories",
@@ -248,7 +191,6 @@ class FileWatcher(FileSystemEventHandler):
                     if self.run_main:
                         context.update(__name__="__main__")
 
-                    # Read the content of the file and execute it within the updated context
                     try:
                         exec(filepath.read_text(), context, context)
                     except SyntaxError:
@@ -260,7 +202,6 @@ class FileWatcher(FileSystemEventHandler):
 
                     if self.run_cells:
                         cells = get_cells_from_dict(context)
-                        # Process each cell and write it to a GDS file
                         for name, cell in cells.items():
                             c = cell()
                             gdspath = dirpath / f"{name}.gds"
@@ -298,61 +239,7 @@ def watch(
     run_embed: bool = True,
     allowed_dirs: list[PathType] | None = None,
 ) -> None:
-    """Starts the file watcher.
-
-    Args:
-        path: the path to the directory to watch.
-        pdk: the name of the PDK to use.
-        run_main: if True, will execute the main function of the file.
-        run_cells: if True, will execute the cells of the file.
-        pre_run: build all cells on startup
-        logger: the logger to use.
-        run_embed: if True, will run the embed function.
-        allowed_dirs: optional list of trusted directories. When provided, only
-            Python files residing inside these directories will be executed.
-
-    Security Warning:
-        The watcher uses ``exec()`` to run Python files with full interpreter
-        privileges. Only watch directories that contain trusted code. Use
-        ``allowed_dirs`` to restrict which directories are eligible for execution.
-    """
-    path = str(path)
-    logger = logger or logging.root
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    if pdk:
-        if isinstance(pdk, str):
-            get_active_pdk(name=pdk)
-        else:
-            pdk.activate()
-    pdk_name = get_active_pdk().name if pdk else None
-
-    print(f"Watching {path=}, {pdk_name=} {run_main=}, {run_cells=}, {pre_run=}")
-    watcher = FileWatcher(
-        path=path,
-        run_main=run_main,
-        run_cells=run_cells,
-        logger=logger,
-        allowed_dirs=allowed_dirs,
-    )
-    watcher.start()
-    if pre_run:
-        for root, _, fns in os.walk(path):
-            for fn in fns:
-                path = os.path.join(root, fn)
-                if path.endswith((".py", ".pic.yml")):
-                    event = SimpleNamespace(is_directory=False, src_path=path)
-                    watcher.on_created(event)  # type: ignore
-
-    logger.info(
-        f"File watcher looking for changes in *.py and *.pic.yml files in {path!r}. Stop with Ctrl+C"
-    )
-    if run_embed:
-        embed()
-    watcher.stop()
+    pass
 
 
 def show(component: ComponentSpec) -> None:

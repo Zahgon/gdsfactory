@@ -113,54 +113,7 @@ def find_min_curv_bezier_control_points(
     alpha: float = 0.05,
     nb_pts: int = 2,
 ) -> Coordinates:
-    """Returns bezier control points that minimize curvature.
-
-    Args:
-        start_point: start point.
-        end_point: end point.
-        start_angle: start angle in deg.
-        end_angle: end angle in deg.
-        npoints: number of points varying between 0 and 1.
-        alpha: weight for angle mismatch.
-        nb_pts: number of control points.
-    """
-    from scipy.optimize import minimize
-
-    t = np.linspace(0, 1, npoints)
-
-    def array_1d_to_cpts(a: npt.NDArray[np.float64]) -> list[tuple[float, float]]:
-        xs = a[::2]
-        ys = a[1::2]
-        return list(zip(xs, ys, strict=False))
-
-    def objective_func(p: npt.NDArray[np.float64]) -> float:
-        """Minimize  max curvaturea and negligible start angle and end angle mismatch."""
-        ps = array_1d_to_cpts(p)
-        control_points = [start_point] + ps + [end_point]
-        path_points = bezier_curve(t, control_points)
-
-        max_curv = max(np.abs(curvature(path_points, t)))
-
-        angles = angles_deg(path_points)
-        dstart_angle = abs(angles[0] - start_angle)
-        dend_angle = abs(angles[-2] - end_angle)
-        angle_mismatch = dstart_angle + dend_angle
-        return float(angle_mismatch * alpha + max_curv)
-
-    x0, y0 = start_point[0], start_point[1]
-    xn, yn = end_point[0], end_point[1]
-
-    initial_guess: list[float] = []
-    for i in range(nb_pts):
-        x = (i + 1) * (x0 + xn) / nb_pts
-        y = (i + 1) * (y0 + yn) / nb_pts
-        initial_guess += [x, y]
-
-    # initial_guess = [(x0 + xn) / 2, y0, (x0 + xn) / 2, yn]
-    res = minimize(objective_func, initial_guess, method="Nelder-Mead")
-    p = res.x
-    points = [start_point] + array_1d_to_cpts(p) + [end_point]
-    return tuple(points)
+    pass
 
 
 @gf.cell_with_module_name(schematic_function=sbend_schematic, tags=["bends"])
@@ -235,9 +188,8 @@ def _get_euler_sbend_angle_middle_length_from_jog(
     dy_full = euler_displacement(theta=90)
 
     if jog <= dy_full:
-        # Define the objective function: squared error between computed displacement and jog
         def objective(theta: float) -> float:
-            return (euler_displacement(theta) - jog) ** 2
+            pass
 
         result = optimize.minimize_scalar(objective, bounds=(1, 90), method="bounded")
         angle_deg = result.x
@@ -351,8 +303,6 @@ def get_min_sbend_size(
 
     assert known_s is not None
 
-    # Guess sizes, iterate over them until we cannot achieve the min radius
-    # the max size corresponds to an ellipsoid
     max_size = float(np.sqrt(np.abs(min_radius * known_s)) * 2.5)
     sizes = np.linspace(max_size, 0.1 * max_size, num_points)
 

@@ -1,4 +1,3 @@
-"""Route bundle electrical with obstacle that does not intersect port bundles."""
 
 from __future__ import annotations
 

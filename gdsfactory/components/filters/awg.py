@@ -1,4 +1,3 @@
-"""Sample AWG."""
 
 from __future__ import annotations
 
@@ -23,72 +22,7 @@ def free_propagation_region(
     outputs: int = 10,
     cross_section: CrossSectionSpec = "strip",
 ) -> Component:
-    r"""Free propagation region.
-
-    Args:
-        width1: width of the input region.
-        width2: width of the output region.
-        length: length of the free propagation region.
-        wg_width: waveguide width.
-        inputs: number of inputs.
-        outputs: number of outputs.
-        cross_section: cross_section function.
-
-                 length
-                 <-->
-                   /|
-                  / |
-           width1|  | width2
-                  \ |
-                   \|
-    """
-    y1 = width1 / 2
-    y2 = width2 / 2
-    xs = gf.get_cross_section(cross_section)
-    layer = xs.layer
-    assert layer is not None
-
-    xpts = [0, length, length, 0]
-    ypts = [y1, y2, -y2, -y1]
-
-    c = gf.Component()
-    c.add_polygon(list(zip(xpts, ypts, strict=False)), layer=layer)
-
-    if inputs == 1:
-        c.add_port(
-            "o1",
-            center=(0, 0),
-            width=wg_width,
-            orientation=180,
-            layer=layer,
-        )
-    else:
-        y = np.linspace(-width1 / 2 + wg_width / 2, width1 / 2 - wg_width / 2, inputs)
-        y = gf.snap.snap_to_grid(y)
-        for i, yi in enumerate(y):
-            c.add_port(
-                f"W{i}",
-                center=(0, float(yi)),
-                width=wg_width,
-                orientation=180,
-                layer=layer,
-            )
-
-    y = np.linspace(-width2 / 2 + wg_width / 2, width2 / 2 - wg_width / 2, outputs)
-    y = gf.snap.snap_to_grid(y)
-    for i, yi in enumerate(y):
-        c.add_port(
-            f"E{i}",
-            center=(length, float(yi)),
-            width=wg_width,
-            orientation=0,
-            layer=layer,
-        )
-
-    c.info["length"] = length
-    c.info["width1"] = width1
-    c.info["width2"] = width2
-    return c
+    pass
 
 
 free_propagation_region_input = partial(free_propagation_region, inputs=1)
@@ -156,9 +90,6 @@ def awg(
             cross_section=cross_section,
         )
     else:
-        # Nested fan: arm i rises earlier and higher than arm i-1 so the bumps nest
-        # without crossing, while the net x-span stays equal to the gap -> each arm is
-        # exactly i*length_increment longer than arm 0.
         fpr_out_ref.mirror_x()
         e0 = fpr_in_ref.ports["E0"]
         fpr_out_ref.movex(e0.x + fpr_spacing - fpr_out_ref.ports["E0"].x)

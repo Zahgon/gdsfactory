@@ -41,7 +41,6 @@ def get_route_bend_count(route: Route) -> int:
         return route.n_bend90
     if isinstance(route, OpticalAllAngleRoute):
         return 100
-    # mypy exhaustiveness
     raise TypeError(f"Unsupported Route type: {type(route)}")
 
 
@@ -120,7 +119,6 @@ def _generate_grid(
         (len(x), len(y))
     )  # mapping from gdsfactory's x-, y- coordinate to grid vertex
 
-    # assign 1 for obstacles
     if avoid_layers is None:
         for inst in c.insts:
             bbox_array = _parse_bbox_to_array(inst.dbbox())
@@ -313,16 +311,12 @@ def route_astar_waypoints(
         end_node=end_node,
     )
 
-    # Convert path to waypoints, move to center of grid cell
     waypoints = [(x[i] + resolution / 2, y[j] + resolution / 2) for i, j in path]
 
-    # Simplify the route
     simplified_path = simplify_path(waypoints, tolerance=0.05)
 
-    # Turning simplified_path, which is list of tuples, to my_waypoints, which is list of lists
     my_waypoints = [list(np.round(pt, 1)) for pt in simplified_path]
 
-    # List to iterate through both ports and the indices of the two waypoints closest to them
     port_data = [
         (port1, 0, 1),
         (port2, -1, -2),
@@ -331,22 +325,18 @@ def route_astar_waypoints(
     for port, closest_index, second_closest_index in port_data:
         if len(my_waypoints) < 2:
             continue
-        # If the orientation of the port is vertical and the path leading to it is vertical
         if (
             port.orientation in [90, 270]
             and abs(my_waypoints[closest_index][0] - port.x) <= resolution
             and my_waypoints[second_closest_index][0] == my_waypoints[closest_index][0]
         ):
-            # In order to not have a bend, the last two waypoints must be aligned with the port x
             my_waypoints[second_closest_index][0] = port.x
             my_waypoints[closest_index][0] = port.x
-        # If the orientation of the port is horizontal and the path leading to it is horizontal
         elif (
             port.orientation in [0, 180]
             and abs(my_waypoints[closest_index][1] - port.y) <= resolution
             and my_waypoints[second_closest_index][1] == my_waypoints[closest_index][1]
         ):
-            # In order to not have a bend, the last two waypoints must be aligned with the port y
             my_waypoints[second_closest_index][1] = port.y
             my_waypoints[closest_index][1] = port.y
 
@@ -369,72 +359,7 @@ def route_astar_single(
     blocked_grid: npt.NDArray[np.bool_] | None = None,
     **kwargs: Any,
 ) -> Route:
-    """Runs a single A* routing attempt between two ports.
-
-    Uses explicitly provided start and end grid-node indices.
-
-    Args:
-        component: Component in which the final route geometry will be inserted.
-        port1: Start port of the route.
-        port2: End port of the route.
-        resolution: Grid discretization step in microns.
-        cross_section: Cross-section specification for the routed waveguide.
-        bend: Component used for bends (e.g. wire_corner or bend_euler).
-        G: Precomputed NetworkX grid graph with obstacle nodes removed.
-        x: 1D array of x-coordinates for grid columns.
-        y: 1D array of y-coordinates for grid rows.
-        start_node: Approximate (i, j) index of the start grid cell.
-        end_node: Approximate (i, j) index of the end grid cell.
-        blocked_grid: Precomputed grid with blocked obstacle cells.
-        **kwargs: Additional arguments passed into the cross-section or route_bundle.
-
-    Returns:
-        A single `Route` object created from the computed A* path.
-
-    Raises:
-        ValueError: If any required grid input is None.
-        nx.NetworkXNoPath: If no valid A* route exists between the nodes.
-    """
-    if x is None:
-        raise ValueError("x array must not be None")
-    if y is None:
-        raise ValueError("y array must not be None")
-    if start_node is None:
-        raise ValueError("start_node must not be None")
-    if end_node is None:
-        raise ValueError("end_node must not be None")
-
-    waypoints_ = route_astar_waypoints(
-        port1=port1,
-        port2=port2,
-        resolution=resolution,
-        G=G,
-        blocked_grid=blocked_grid,
-        x=x,
-        y=y,
-        start_node=start_node,
-        end_node=end_node,
-    )
-    route_bundle_kwargs = {
-        key: value for key, value in kwargs.items() if key in ROUTE_BUNDLE_KWARGS
-    }
-    cross_section_kwargs = {
-        key: value for key, value in kwargs.items() if key not in ROUTE_BUNDLE_KWARGS
-    }
-    cross_section = (
-        gf.get_cross_section(cross_section, **cross_section_kwargs)
-        if cross_section_kwargs
-        else cross_section
-    )
-    return gf.routing.route_bundle(
-        component=component,
-        ports1=[port1],
-        ports2=[port2],
-        waypoints=waypoints_,
-        cross_section=cross_section,
-        bend=bend,
-        **route_bundle_kwargs,
-    )[0]
+    pass
 
 
 def route_astar(
@@ -561,7 +486,6 @@ def route_astar(
     else:
         raise ValueError("port2 orientation must be in [0, 90, 180, 270]")
 
-    # Score candidate paths without placing temporary geometry.
     candidates: list[tuple[int, int, list[DPoint]]] = []
 
     for start_coords in start_node_coordinates:
@@ -598,9 +522,6 @@ def route_astar(
     if not candidates:
         raise RuntimeError("All A* routing attempts failed.")
 
-    # Validate generated waypoints against route_bundle before selecting a route.
-    # A low-bend A* path can still be unbuildable once bend-radius and collision
-    # constraints are applied downstream.
     valid_candidates: list[tuple[int, int, list[DPoint]]] = []
     for _, waypoint_count, waypoints in sorted(
         candidates, key=lambda item: (item[0], item[1])
@@ -628,7 +549,6 @@ def route_astar(
         valid_candidates, key=lambda item: (item[0], item[1])
     )
 
-    # Build optimized route on real component
     return gf.routing.route_bundle(
         component=component,
         ports1=[port1],

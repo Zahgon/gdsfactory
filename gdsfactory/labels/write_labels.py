@@ -1,4 +1,3 @@
-"""Find GDS labels and write them to a CSV file."""
 
 from __future__ import annotations
 
@@ -34,17 +33,14 @@ def find_labels(
         y: y position (um).
         angle: in degrees.
     """
-    # Load the layout
     gdspath = str(gdspath)
     layout = pya.Layout()
     layout.read(gdspath)
 
-    # Get the top cell and the units, and find out the index of the layer
     topcell = layout.top_cell()
 
     layer_label = gf.get_layer_tuple(layer_label)
 
-    # Extract locations
     iterator = topcell.begin_shapes_rec(layout.layer(*layer_label))
 
     while not (iterator.at_end()):

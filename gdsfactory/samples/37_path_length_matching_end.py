@@ -1,8 +1,3 @@
-"""Sample path length matching with loops at the end.
-
-Places delay loops at the end of the route, on both sides (center loop_side),
-matching to the last route (element=-1).
-"""
 
 from __future__ import annotations
 

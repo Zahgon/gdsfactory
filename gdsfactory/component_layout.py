@@ -1,7 +1,3 @@
-"""Helper functions for layout.
-
-Adapted from PHIDL https://github.com/amccaugh/phidl/ by Adam McCaughan
-"""
 
 from __future__ import annotations
 
@@ -26,27 +22,7 @@ from gdsfactory.typings import Axis, Coordinate, Port
 
 
 def pprint_ports(ports: Sequence[gf.Port]) -> None:
-    """Prints ports in a rich table."""
-    console = Console()
-    table = Table(show_header=True, header_style="bold")
-    ports_list = ports
-    if not ports_list:
-        return
-    p0 = ports_list[0]
-    filtered_dict = {
-        key: value for key, value in to_dict(p0).items() if value is not None
-    }
-    keys = filtered_dict.keys()
-
-    for key in keys:
-        table.add_column(key)
-
-    for port in ports_list:
-        port_dict = to_dict(port)
-        row = [str(port_dict.get(key, "")) for key in keys]
-        table.add_row(*row)
-
-    console.print(table)
+    pass
 
 
 def rotate_points(
@@ -115,7 +91,6 @@ def reflect_points(
     line_vec = p2_array - p1_array
     line_vec_norm = norm(line_vec) ** 2
 
-    # Compute reflection
     proj = np.sum(line_vec * (points - p1_array), axis=-1, keepdims=True)
     reflected_points = (
         2 * (p1_array + (p2_array - p1_array) * proj / line_vec_norm) - points
@@ -165,7 +140,6 @@ def parse_move(
         dy : int or float
             Change in position in the y-direction.
     """
-    # If only one set of coordinates is defined, make sure it's used to move things
     if destination is None:
         destination = origin
         origin = (0, 0)

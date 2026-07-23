@@ -1,4 +1,3 @@
-"""Route using Dubins paths for shortest path with minimal bending."""
 
 from __future__ import annotations
 

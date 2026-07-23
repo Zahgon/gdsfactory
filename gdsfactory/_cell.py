@@ -161,15 +161,7 @@ def cell(
     def wrapper(
         func: ComponentFunc[ComponentParams],
     ) -> ComponentFunc[ComponentParams]:
-        decorated: Any
-        if with_module_name and basename is None:
-            decorated = _cell(
-                func, **{**cell_kwargs, "basename": _module_basename(func)}
-            )
-        else:
-            decorated = c(func)
-        decorated.is_gf_cell = True
-        return cast(ComponentFunc[ComponentParams], decorated)
+        pass
 
     return wrapper
 
@@ -257,14 +249,7 @@ def vcell[**ComponentParams](
     def wrapper(
         func: ComponentAllAngleFunc[ComponentParams],
     ) -> ComponentAllAngleFunc[ComponentParams]:
-        if with_module_name and basename is None:
-            decorated: Any = _vcell(
-                func, **{**vcell_kwargs, "basename": _module_basename(func)}
-            )
-        else:
-            decorated = vc(func)
-        decorated.is_gf_vcell = True
-        return cast(ComponentAllAngleFunc[ComponentParams], decorated)
+        pass
 
     return wrapper
 

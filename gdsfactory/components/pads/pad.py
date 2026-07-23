@@ -121,77 +121,7 @@ def pad_array(
     centered_ports: bool = False,
     auto_rename_ports: bool = False,
 ) -> Component:
-    """Returns 2D array of pads.
-
-    Args:
-        pad: pad element.
-        columns: number of columns.
-        rows: number of rows.
-        column_pitch: x pitch.
-        row_pitch: y pitch.
-        port_orientation: port orientation in deg. None for low speed DC ports.
-        size: pad size.
-        layer: pad layer.
-        centered_ports: True add ports to center. False add ports to the edge.
-        auto_rename_ports: True to auto rename ports.
-    """
-    c = Component()
-
-    pad_kwargs: dict[str, Any] = {}
-    if layer is not None:
-        pad_kwargs["layer"] = layer
-    if size is not None:
-        pad_kwargs["size"] = size
-    pad_component = gf.get_component(
-        pad,
-        port_orientation=port_orientation,
-        port_orientations=(port_orientation,) if not centered_ports else None,
-        **pad_kwargs,
-    )
-
-    pad_size: Float2 = size or pad_component.info["size"]
-    pad_layer: LayerSpec = layer or pad_component.ports[0].layer
-
-    c.add_ref(
-        pad_component,
-        columns=columns,
-        rows=rows,
-        column_pitch=column_pitch,
-        row_pitch=row_pitch,
-    )
-    width = pad_size[0] if int(port_orientation) in {90, 270} else pad_size[1]
-
-    for col in range(columns):
-        for row in range(rows):
-            center = (col * column_pitch, row * row_pitch)
-            port_orientation = int(port_orientation)
-            center_list = [center[0], center[1]]
-
-            if not centered_ports:
-                if port_orientation == 0:
-                    center_list[0] += pad_size[0] / 2
-                elif port_orientation == 90:
-                    center_list[1] += pad_size[1] / 2
-                elif port_orientation == 180:
-                    center_list[0] -= pad_size[0] / 2
-                elif port_orientation == 270:
-                    center_list[1] -= pad_size[1] / 2
-
-            center = (center_list[0], center_list[1])
-            c.add_port(
-                name=f"e{row + 1}{col + 1}",
-                center=center,
-                width=width,
-                orientation=port_orientation,
-                port_type="electrical",
-                layer=pad_layer,
-            )
-    if auto_rename_ports:
-        c.auto_rename_ports()
-    for port in c.ports:
-        if port.port_type == "electrical":
-            c.create_pin(ports=[port], name=f"pad_{port.name}")
-    return c
+    pass
 
 
 pad_array90 = partial(pad_array, port_orientation=90)

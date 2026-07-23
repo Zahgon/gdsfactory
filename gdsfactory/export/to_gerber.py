@@ -1,11 +1,3 @@
-"""Based on Gerber file spec.
-
-https://www.ucamco.com/files/downloads/file_en/456/gerber-layer-format-specification-revision-2022-02_en.pdf.
-
-See Also:
-- https://github.com/opiopan/pcb-tools-extension
-- https://github.com/jamesbowman/cuflow/blob/master/gerber.py
-"""
 
 from pathlib import Path
 from typing import Literal
@@ -29,7 +21,6 @@ class GerberOptions(BaseModel):
     int_size: int = 4
 
 
-# For generating a gerber job json file
 class BoardOptions(BaseModel):
     size: Size | None = None
     n_layers: int = 2
@@ -56,12 +47,9 @@ def number(n: float) -> str:
 def points(pp: list[tuple[float, float]]) -> str:
     if not pp:
         return ""
-    # Use a list to collect the formatted strings for better performance
     parts = []
-    # First point uses D02
     x0, y0 = pp[0]
     parts.append(f"X{number(x0)}Y{number(y0)}D02*\n")
-    # Rest use D01 (if any)
     if len(pp) > 1:
         for x, y in pp[1:]:
             parts.append(f"X{number(x)}Y{number(y)}D01*\n")
@@ -69,11 +57,11 @@ def points(pp: list[tuple[float, float]]) -> str:
 
 
 def rect(x0: float, y0: float, x1: float, y1: float) -> str:
-    return "D10*\n" + points([(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)])
+    pass
 
 
 def linestring(pp: list[tuple[float, float]]) -> str:
-    return "D10*\n" + points(pp)
+    pass
 
 
 def polygon(pp: list[tuple[float, float]]) -> str:
@@ -98,7 +86,6 @@ def to_gerber(
             resolution: float = 1e-6
             int_size: int = 4
     """
-    # Each layer and a list of the polygons (as lists of points) on that layer
     layer_to_polygons = component.get_polygons_points()
 
     for layer_tup, layer in layermap_to_gerber_layer.items():
@@ -110,29 +97,23 @@ def to_gerber(
                 f"Component: {component.name}",
             ]
 
-            # Write file spec info
             f.write("%TF.FileFunction," + ",".join(layer.function) + "*%\n")
             f.write(f"%TF.FilePolarity,{layer.polarity}*%\n")
 
             digits = resolutions[options.resolution]
             f.write(f"%FSLA{options.int_size}{digits}Y{options.int_size}{digits}X*%\n")
 
-            # Write header comments
             f.writelines([f"G04 {line}*\n" for line in header])
 
-            # Setup units/mode
             units = options.mode.upper()
             f.write(f"%MO{units}*%\n")
             f.write("%LPD*%")
 
             f.write("G01*\n")
 
-            # Aperture definition
             f.write("%ADD10C,0.050000*%\n")
 
-            # Only supports polygons for now
             if layer_tup in layer_to_polygons:
                 f.writelines(polygon(poly) for poly in layer_to_polygons[layer_tup])  # type: ignore[arg-type]
 
-            # File end
             f.write("M02*\n")

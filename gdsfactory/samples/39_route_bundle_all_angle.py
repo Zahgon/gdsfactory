@@ -1,4 +1,3 @@
-"""Route bundle using all-angle (diagonal) routing."""
 
 from __future__ import annotations
 

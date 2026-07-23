@@ -1,9 +1,3 @@
-"""Generate Python code from YAML component definitions.
-
-This module provides code generation functionality that mirrors from_yaml.py,
-but instead of creating components, it generates Python code strings that would
-create those components.
-"""
 
 from __future__ import annotations
 
@@ -87,19 +81,15 @@ def from_yaml_to_code(
         >>> code = from_yaml_to_code(yaml_str)
         >>> print(code)
     """
-    # Load and validate YAML using existing infrastructure
     dct = _load_yaml_str(yaml_str)
-    # Keep the raw dict to know which settings were actually specified
     raw_instances = dct.get("instances", {})
     net = Netlist.model_validate(dct)
     g = _get_dependency_graph(net)
 
     lines: list[str] = []
 
-    # Track required imports
     needs_kf = False
 
-    # Add imports
     lines.append("import gdsfactory as gf")
     lines.append("from gdsfactory.component import Component")
     if any(inst.virtual for inst in net.instances.values()):
@@ -107,7 +97,6 @@ def from_yaml_to_code(
     lines.append("from gdsfactory.pdk import get_active_pdk")
     lines.append("from gdsfactory.add_pins import add_instance_label")
 
-    # Check if we need kfactory for GridArray instances or boolean mirror
     for inst in net.instances.values():
         if isinstance(inst.array, GridArray):
             needs_kf = True
@@ -124,7 +113,6 @@ def from_yaml_to_code(
     lines.append("")
     lines.append("")
 
-    # Function definition
     lines.append("@gf.cell")
     lines.append(f"def {function_name}() -> Component:")
     if net.name:
@@ -133,11 +121,9 @@ def from_yaml_to_code(
     lines.append("    c = Component()")
     lines.append("")
 
-    # Add instances
     if net.instances:
         lines.append("    # Create instances")
         for name, inst in net.instances.items():
-            # Get raw settings from YAML (before validation filled in defaults)
             raw_inst = raw_instances.get(name, {})
             raw_settings = (
                 raw_inst.get("settings", {}) if isinstance(raw_inst, dict) else {}
@@ -145,7 +131,6 @@ def from_yaml_to_code(
             lines.extend(_generate_instance_code(name, inst, raw_settings))
         lines.append("")
 
-    # Process placements and connections in dependency order
     directed_connections = _get_directed_connections(net.connections)
 
     has_placements_or_connections = bool(net.placements) or bool(net.connections)
@@ -153,22 +138,17 @@ def from_yaml_to_code(
         lines.append("    # Place instances and make connections")
 
     for root in _graph_roots(g):
-        # Place root if it has placement
         if root in net.placements:
             placement_lines = _generate_placement_code(root, net.placements[root])
             lines.extend(placement_lines)
 
-        # Traverse the graph in DFS order
         for i2, i1 in nx.dfs_edges(g, root):
-            # Get connection info
             ports = directed_connections.get(i1, {}).get(i2, None)
 
-            # Place i1 if it has placement
             if i1 in net.placements:
                 placement_lines = _generate_placement_code(i1, net.placements[i1])
                 lines.extend(placement_lines)
 
-            # Make connection if it exists
             if ports is not None:
                 connection_lines = _generate_connection_code(i1, i2, ports)
                 lines.extend(connection_lines)
@@ -176,14 +156,12 @@ def from_yaml_to_code(
     if has_placements_or_connections:
         lines.append("")
 
-    # Add routes
     if net.routes:
         lines.append("    # Add routes")
         for bundle_name, bundle in net.routes.items():
             lines.extend(_generate_route_code(bundle_name, bundle))
         lines.append("")
 
-    # Add instance labels
     if net.instances:
         lines.append("    # Add instance labels")
         lines.extend(
@@ -192,26 +170,22 @@ def from_yaml_to_code(
         )
         lines.append("")
 
-    # Add ports
     if net.ports:
         lines.append("    # Expose ports")
         for port_name, port_spec in net.ports.items():
             lines.extend(_generate_port_code(port_name, port_spec))
         lines.append("")
 
-    # Set component info
     if net.info:
         lines.append("    # Set component info")
         for key, value in net.info.items():
             lines.append(f"    c.info[{_format_value(key)}] = {_format_value(value)}")
         lines.append("")
 
-    # Set name
     if net.name:
         lines.append(f"    c.name = {_format_value(net.name)}")
         lines.append("")
 
-    # Return component
     lines.append("    return c")
 
     return "\n".join(lines)
@@ -232,10 +206,8 @@ def _generate_instance_code(
     """
     lines: list[str] = []
 
-    # Build component getter - unpack settings as kwargs from YAML
     comp_str = _format_value(inst.component)
 
-    # Only include settings that were actually specified in the YAML (not defaults)
     if raw_settings:
         settings_kwargs = ", ".join(
             f"{k}={_format_value(v)}" for k, v in raw_settings.items()
@@ -244,10 +216,8 @@ def _generate_instance_code(
     else:
         component_getter = f"pdk.get_component({comp_str})"
 
-    # Handle different instance types
     if isinstance(inst.array, OrthogonalGridArray):
         arr = inst.array
-        # Build arguments list - only include what's specified
         args = [
             f"        {component_getter},",
             f"        rows={arr.rows},",
@@ -258,7 +228,6 @@ def _generate_instance_code(
             args.append(f"        column_pitch={arr.column_pitch},")
         if arr.row_pitch is not None:
             args.append(f"        row_pitch={arr.row_pitch},")
-        # Remove trailing comma from last arg
         args[-1] = args[-1].rstrip(",")
 
         lines.append(f"    {name} = c.add_ref(")
@@ -274,7 +243,6 @@ def _generate_instance_code(
             f"        a=kf.kdb.DVector({grid_arr.pitch_a[0]}, {grid_arr.pitch_a[1]}),",
             f"        b=kf.kdb.DVector({grid_arr.pitch_b[0]}, {grid_arr.pitch_b[1]}),",
         ]
-        # Remove trailing comma from last arg
         args[-1] = args[-1].rstrip(",")
 
         lines.append(f"    {name} = c.create_inst(")
@@ -282,7 +250,6 @@ def _generate_instance_code(
         lines.append("    )")
 
     else:
-        # Regular instance
         if inst.virtual:
             lines.append(f"    {name} = c.add_ref_off_grid({component_getter})")
             lines.append(f"    {name}.name = {_format_value(name)}")
@@ -310,7 +277,6 @@ def _generate_placement_code(inst_name: str, placement: Placement) -> list[str]:
     """
     lines: list[str] = []
 
-    # 1. Rotation
     if placement.rotation and placement.rotation != 0:
         if placement.port:
             center_code = _get_anchor_point_code(inst_name, placement.port)
@@ -320,7 +286,6 @@ def _generate_placement_code(inst_name: str, placement: Placement) -> list[str]:
         else:
             lines.append(f"    {inst_name}.rotate({placement.rotation})")
 
-    # 2. Mirror (matches from_yaml.py: dmirror_x / DCplxTrans)
     if placement.mirror:
         if placement.mirror is True:
             if placement.port:
@@ -336,7 +301,6 @@ def _generate_placement_code(inst_name: str, placement: Placement) -> list[str]:
         else:
             lines.append(f"    {inst_name}.dmirror_x(x={inst_name}.x)")
 
-    # 3. Move
     x_offset_parts: list[str] = []
     y_offset_parts: list[str] = []
 
@@ -457,7 +421,6 @@ def _generate_connection_code(i1: str, i2: str, ports: tuple[str, str]) -> list[
     i1name, i1a, i1b = _parse_maybe_arrayed_instance(i1)
     i2name, i2a, i2b = _parse_maybe_arrayed_instance(i2)
 
-    # Build port access code
     if i1a is not None and i1b is not None:
         port1_code = f"{i1name}.ports[{_format_value(p1)}, {i1a}, {i1b}]"
         if i2a is not None and i2b is not None:
@@ -498,28 +461,23 @@ def _generate_route_code(bundle_name: str, bundle: Any) -> list[str]:
     routing_strategy = bundle.routing_strategy
     lines.append(f"    # Route: {bundle_name}")
 
-    # Collect port access code
     ports1_code: list[str] = []
     ports2_code: list[str] = []
 
-    # Process links
     for ip1, ip2 in bundle.links.items():
         first1, middles1, last1 = _split_route_link(ip1)
         first2, middles2, last2 = _split_route_link(ip2)
 
-        # Generate port gathering code
         for m1, m2 in zip(middles1, middles2, strict=False):
             ip1_full = first1 + m1 + last1
             ip2_full = first2 + m2 + last2
 
-            # Parse instance and port
             i1, p1 = ip1_full.split(",", 1)
             i2, p2 = ip2_full.split(",", 1)
 
             i1name, i1a, i1b = _parse_maybe_arrayed_instance(i1)
             i2name, i2a, i2b = _parse_maybe_arrayed_instance(i2)
 
-            # Generate port access
             if i1a is None or i1b is None:
                 port1_code = f"{i1name}.ports[{_format_value(p1)}]"
             else:
@@ -533,12 +491,9 @@ def _generate_route_code(bundle_name: str, bundle: Any) -> list[str]:
             ports1_code.append(port1_code)
             ports2_code.append(port2_code)
 
-    # Build port list literals
     ports1_literal = "[" + ", ".join(ports1_code) + "]"
     ports2_literal = "[" + ", ".join(ports2_code) + "]"
 
-    # Generate routing call
-    # Build settings kwargs
     settings_str = ""
     if bundle.settings:
         settings_items = [f"{k}={_format_value(v)}" for k, v in bundle.settings.items()]

@@ -1,8 +1,3 @@
-"""Core cross-section classes and type definitions.
-
-You can define a path as list of points.
-To create a component you need to extrude the path with a cross-section.
-"""
 
 from __future__ import annotations
 
@@ -68,43 +63,6 @@ deprecated_routing = {
 
 
 class Section(BaseModel):
-    """CrossSection to extrude a path with a waveguide.
-
-    Parameters:
-        width: of the section (um). When `width_function` is set it takes \
-                precedence during extrusion, so `width` acts as a nominal value.
-        offset: center offset (um). When `offset_function` is set it takes \
-                precedence during extrusion, so `offset` acts as a nominal value.
-        insets: distance (um) in x to inset section relative to end of the Path \
-                (i.e. (start inset, stop_inset)).
-        layer: layer spec. If None does not draw the main section.
-        port_names: Optional port names.
-        port_types: optical, electrical, ...
-        name: Optional Section name.
-        hidden: hide layer.
-        simplify: Optional Tolerance value for the simplification algorithm. \
-                All points that can be removed without changing the resulting. \
-                polygon by more than the value listed here will be removed.
-        skip_transition: if True, this section is excluded from cross-section \
-                transitions (will not be tapered between two CrossSections).
-        width_function: parameterized function from 0 to 1.
-        offset_function: parameterized function from 0 to 1.
-
-         0
-
-         │        ┌───────┐
-                  │       │
-         │        │ layer │
-                  │◄─────►│
-         │        │       │
-                  │ width │
-         │        └───────┘
-                      |
-         │
-                      |
-         ◄────────────►
-            +offset
-    """
 
     width: NonNegativeFloat = 0
     offset: float = 0
@@ -125,46 +83,26 @@ class Section(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def generate_default_name(cls, data: Any) -> Any:
-        if not data.get("name"):
-            h = hashlib.md5(str(data).encode()).hexdigest()[:8]
-            data["name"] = f"s_{h}"
-        return data
+        pass
 
     @model_validator(mode="after")
     def _require_width_value_or_function(self) -> Self:
-        if self.width == 0 and self.width_function is None:
-            raise ValueError("Section requires `width > 0` or a `width_function`.")
-        return self
+        pass
 
     @field_serializer("width_function")
     def serialize_width_function(
         self, func: typings.WidthFunction | None
     ) -> str | None:
-        if func is None:
-            return None
-        t_values = np.linspace(0, 1, 11)
-        return ",".join([str(round(width, 3)) for width in func(t_values)])
+        pass
 
     @field_serializer("offset_function")
     def serialize_offset_function(
         self, func: typings.OffsetFunction | None
     ) -> str | None:
-        if func is None:
-            return None
-        t_values = np.linspace(0, 1, 11)
-        return ",".join([str(round(func(offset), 3)) for offset in t_values])
+        pass
 
 
 class ComponentAlongPath(BaseModel):
-    """A ComponentAlongPath object to place along an extruded path.
-
-    Parameters:
-        component: to repeat along the path. The unrotated version should be oriented \
-                for placement on a horizontal line.
-        spacing: distance between component placements
-        padding: minimum distance from the path start to the first component.
-        y_offset: offset in y direction (um).
-    """
 
     component: Component
     spacing: float
@@ -178,43 +116,6 @@ Sections = tuple[Section, ...]
 
 
 class CrossSection(BaseModel):
-    """Waveguide information to extrude a path.
-
-    Parameters:
-        sections: tuple of Sections(width, offset, layer, ports).
-        components_along_path: tuple of ComponentAlongPaths.
-        radius: default bend radius for routing (um).
-        radius_min: minimum acceptable bend radius.
-        bbox_layers: layer to add as bounding box.
-        bbox_offsets: offset to add to the bounding box.
-
-
-           ┌────────────────────────────────────────────────────────────┐
-           │                                                            │
-           │                                                            │
-           │                   boox_layer                               │
-           │                                                            │
-           │         ┌──────────────────────────────────────┐           │
-           │         │                            ▲         │bbox_offset│
-           │         │                            │         ├──────────►│
-           │         │           cladding_offset  │         │           │
-           │         │                            │         │           │
-           │         ├─────────────────────────▲──┴─────────┤           │
-           │         │                         │            │           │
-        ─ ─┤         │           core   width  │            │           ├─ ─ center
-           │         │                         │            │           │
-           │         ├─────────────────────────▼────────────┤           │
-           │         │                                      │           │
-           │         │                                      │           │
-           │         │                                      │           │
-           │         │                                      │           │
-           │         └──────────────────────────────────────┘           │
-           │                                                            │
-           │                                                            │
-           │                                                            │
-           └────────────────────────────────────────────────────────────┘
-
-    """
 
     sections: Sections = Field(default_factory=tuple)
     components_along_path: tuple[ComponentAlongPath, ...] = Field(default_factory=tuple)
@@ -247,23 +148,18 @@ class CrossSection(BaseModel):
 
     @property
     def name(self) -> str:
-        if self._name:
-            return self._name
-        h = hashlib.md5(str(self).encode()).hexdigest()[:8]
-        return f"xs_{h}"
+        pass
 
     @property
     def width(self) -> float:
-        return self.sections[0].width
+        pass
 
     @property
     def layer(self) -> typings.LayerSpec:
         return self.sections[0].layer
 
     def append_sections(self, sections: Sections) -> Self:
-        """Append sections to the cross_section."""
-        new_sections = list(self.sections) + list(sections)
-        return self.model_copy(update={"sections": tuple(new_sections)})
+        pass
 
     def __getitem__(self, key: str) -> Section:
         """Returns the section with the given name."""
@@ -274,8 +170,7 @@ class CrossSection(BaseModel):
 
     @property
     def hash(self) -> str:
-        """Returns a hash of the cross_section."""
-        return hashlib.md5(str(self).encode()).hexdigest()
+        pass
 
     def copy(
         self,
@@ -379,36 +274,13 @@ class CrossSection(BaseModel):
         return c
 
     def get_xmin_xmax(self) -> tuple[float, float]:
-        """Returns the min and max extent of the cross_section across all sections."""
-        main_width = self.width
-        main_offset = self.sections[0].offset
-        xmin = main_offset - main_width / 2
-        xmax = main_offset + main_width / 2
-        for section in self.sections:
-            width = section.width
-            offset = section.offset
-            xmin = min(xmin, offset - width / 2)
-            xmax = max(xmax, offset + width / 2)
-
-        return xmin, xmax
+        pass
 
 
 CrossSection.model_rebuild()
 
 
 class Transition(BaseModel, arbitrary_types_allowed=True):
-    """Waveguide information to extrude a path between two CrossSection.
-
-    cladding_layers follow path shape
-
-    Parameters:
-        cross_section1: input cross_section.
-        cross_section2: output cross_section.
-        width_type: 'sine', 'linear', 'parabolic' or Callable. Sets the type of width \
-                transition used if widths are different between the two input CrossSections.
-        offset_type: 'sine', 'linear', 'parabolic' or Callable. Sets the type of offset \
-                transition used if offsets are different between the two input CrossSections.
-    """
 
     cross_section1: CrossSectionSpec
     cross_section2: CrossSectionSpec
@@ -420,26 +292,10 @@ class Transition(BaseModel, arbitrary_types_allowed=True):
         self,
         width_type: typings.WidthTypes | Callable[[float, float, float], float],
     ) -> str:
-        if isinstance(width_type, str):
-            return width_type
-        # TODO: implement callable serialization for width_type.
-        raise NotImplementedError(
-            "Serialization of callable width_type is not yet supported. "
-            "Use a string value ('sine', 'linear', or 'parabolic') instead."
-        )
+        pass
 
 
 class TransitionAsymmetric(BaseModel, arbitrary_types_allowed=True):
-    """Waveguide information to extrude a path between two CrossSection with asymmetric transitions.
-
-    Parameters:
-        cross_section1: input cross_section.
-        cross_section2: output cross_section.
-        width_type1: transition type for lower edge width ('sine', 'linear', 'parabolic' or Callable).
-        width_type2: transition type for upper edge width.
-        offset_type1: transition type for lower edge offset.
-        offset_type2: transition type for upper edge offset.
-    """
 
     cross_section1: CrossSectionSpec
     cross_section2: CrossSectionSpec
@@ -453,48 +309,28 @@ class TransitionAsymmetric(BaseModel, arbitrary_types_allowed=True):
         self,
         width_type1: typings.WidthTypes | Callable[[float, float, float], float],
     ) -> str:
-        if isinstance(width_type1, str):
-            return width_type1
-        raise NotImplementedError(
-            "Serialization of callable width_type1 is not yet supported. "
-            "Use a string value ('sine', 'linear', or 'parabolic') instead."
-        )
+        pass
 
     @field_serializer("width_type2")
     def serialize_width_type2(
         self,
         width_type2: typings.WidthTypes | Callable[[float, float, float], float],
     ) -> str:
-        if isinstance(width_type2, str):
-            return width_type2
-        raise NotImplementedError(
-            "Serialization of callable width_type2 is not yet supported. "
-            "Use a string value ('sine', 'linear', or 'parabolic') instead."
-        )
+        pass
 
     @field_serializer("offset_type1")
     def serialize_offset_type1(
         self,
         offset_type1: typings.WidthTypes | Callable[[float, float, float], float],
     ) -> str:
-        if isinstance(offset_type1, str):
-            return offset_type1
-        raise NotImplementedError(
-            "Serialization of callable offset_type1 is not yet supported. "
-            "Use a string value ('sine', 'linear', or 'parabolic') instead."
-        )
+        pass
 
     @field_serializer("offset_type2")
     def serialize_offset_type2(
         self,
         offset_type2: typings.WidthTypes | Callable[[float, float, float], float],
     ) -> str:
-        if isinstance(offset_type2, str):
-            return offset_type2
-        raise NotImplementedError(
-            "Serialization of callable offset_type2 is not yet supported. "
-            "Use a string value ('sine', 'linear', or 'parabolic') instead."
-        )
+        pass
 
 
 type CrossSectionFactory = Callable[..., "CrossSection"]

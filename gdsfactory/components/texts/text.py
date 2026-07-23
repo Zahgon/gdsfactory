@@ -76,20 +76,7 @@ def text_lines(
     size: float = 0.4,
     layer: LayerSpec = "WG",
 ) -> Component:
-    """Returns a Component from a text lines.
-
-    Args:
-        text: list of strings.
-        size: text size.
-        layer: text layer.
-    """
-    c = gf.Component()
-
-    for i, texti in enumerate(text):
-        t = gf.c.text_rectangular(text=texti, size=size, layer=layer)
-        tref = c.add_ref(t)
-        tref.movey(-6 * size * (i + 1))
-    return c
+    pass
 
 
 @gf.cell_with_module_name(tags=["texts"])
@@ -99,23 +86,4 @@ def text_klayout(
     layers: LayerSpecs | None = None,
     bbox_layers: LayerSpecs | None = None,
 ) -> Component:
-    """Returns a text component.
-
-    Args:
-        text: string.
-        layer: text layer.
-        layers: layers for the text.
-        bbox_layers: layers for the text bounding box.
-    """
-    c = gf.Component()
-    gen = kf.kdb.TextGenerator.default_generator()
-    reg = gen.text(text, kf.kcl.dbu)
-
-    layers = layers or [layer]
-
-    for text_layer in layers:
-        c.shapes(gf.get_layer(text_layer)).insert(reg)
-
-    for bbox_layer in bbox_layers or []:
-        c.shapes(gf.get_layer(bbox_layer)).insert(reg.bbox())
-    return c
+    pass

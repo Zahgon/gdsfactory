@@ -1,4 +1,3 @@
-"""This module contains functions to automatically add tapers to a component's ports, and to create tapers between different cross sections."""
 
 from __future__ import annotations
 
@@ -96,7 +95,6 @@ def add_auto_tapers(
                 taper, width1=port_width, width2=cs_width
             )
 
-        # Ensure we filter out i.e. extra electrical ports if we should be looking at optical ones
         taper_ports = [
             tp for tp in taper_component.ports if tp.port_type == p.port_type
         ]
@@ -141,8 +139,6 @@ def auto_taper_to_cross_section(
     Returns:
         The port at the opposite (unconnected end) of the taper.
     """
-    # Reuse fast version above for legacy compatibility
-    # (not used in new add_auto_tapers flow)
     cross_section = gf.get_cross_section(cross_section)
     cs_layer = gf.get_layer(cross_section.layer)
     cs_width = cross_section.width
@@ -182,7 +178,6 @@ def auto_taper_to_cross_section(
     else:
         taper_component = gf.get_component(taper, width1=port_width, width2=cs_width)
 
-    # ensure we filter out i.e. extra electrical ports if we should be looking at optical ones
     taper_ports = [p for p in taper_component.ports if p.port_type == port.port_type]
 
     if len(taper_ports) != 2:

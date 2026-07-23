@@ -1,4 +1,3 @@
-"""Serialize component settings into YAML or strings."""
 
 from __future__ import annotations
 
@@ -223,17 +222,13 @@ def clean_value_partial(
 
 def clean_value_name(value: Any) -> str:
     """Returns a valid Python variable name representation of an object."""
-    # Convert the value to a string and replace spaces with underscores
     cleaned = str(clean_value_json(value)).replace(" ", "_")
 
-    # Remove invalid characters (only allow letters, numbers, and underscores)
     cleaned = re.sub(r"[^a-zA-Z0-9_]", "", cleaned)
 
-    # Ensure the name starts with a letter or underscore
     if not cleaned or not cleaned[0].isalpha():
         cleaned = f"var_{cleaned}"
 
-    # Avoid reserved Python keywords
     if iskeyword(cleaned):
         cleaned = f"{cleaned}_var"
 

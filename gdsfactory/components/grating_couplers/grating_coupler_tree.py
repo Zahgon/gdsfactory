@@ -20,31 +20,4 @@ def grating_coupler_tree(
     cross_section: CrossSectionSpec = "strip",
     **kwargs: Any,
 ) -> Component:
-    """Array of straights connected with grating couplers.
-
-    useful to align the 4 corners of the chip
-
-    Args:
-        n: number of gratings.
-        straight_spacing: in um.
-        grating_coupler: spec.
-        with_loopback: adds loopback.
-        bend: bend spec.
-        fanout_length: in um.
-        cross_section: cross_section function.
-        kwargs: additional arguments.
-    """
-    c = gf.c.straight_array(
-        n=n,
-        spacing=straight_spacing,
-    )
-
-    return gf.routing.add_fiber_array(
-        component=c,
-        with_loopback=with_loopback,
-        grating_coupler=grating_coupler,
-        fanout_length=fanout_length,
-        bend=bend,
-        cross_section=cross_section,
-        **kwargs,
-    )
+    pass

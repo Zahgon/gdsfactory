@@ -1,9 +1,3 @@
-"""Pin-to-Port resolution for electrical routing.
-
-Resolves Pin pairs to Port pairs by selecting the ports that minimize
-Euclidean distance between connection points. Cell designers control
-which directions are routable by choosing which ports to include in a Pin.
-"""
 
 from __future__ import annotations
 

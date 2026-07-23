@@ -20,25 +20,7 @@ class ToSymbol(Protocol):
 
 
 def symbol_from_cell(func: _F, to_symbol: ToSymbol) -> _F:
-    """Creates a symbol function from a component function.
-
-    Args:
-        func: the cell function
-        to_symbol: the function that transforms the output of the cell function into a symbol
-
-    Returns:
-        a symbol function
-    """
-
-    @functools.wraps(func)
-    def _symbol(*args: Any, **kwargs: Any) -> Component:
-        component = func(*args, **kwargs)
-        func_name = getattr(func, "__name__", str(func))
-        c_symbol = to_symbol(component, prefix=f"SYMBOL_{func_name}")
-        return c_symbol
-
-    _symbol._symbol = True  # type: ignore[attr-defined]
-    return _symbol
+    pass
 
 
 @symbol
@@ -69,12 +51,10 @@ def floorplan_with_block_letters(
     h = component.dsize_info.height
     sym = Component()
 
-    # add floorplan box
     bbox = sym << rectangle(size=(w, h), layer=bbox_layer)
     bbox.x = component.x
     bbox.y = component.y
 
-    # add text, fit to box with specified margin
     margin = 0.2
     max_w, max_h = w * (1 - margin), h * (1 - margin)
     text_init_size = 3.0
@@ -104,7 +84,6 @@ def floorplan_with_block_letters(
 
     sym.add_ports(component.ports)
 
-    # add specified layers from original layout
     if copy_layers:
         for layer in copy_layers:
             layer = gf.get_layer(layer)

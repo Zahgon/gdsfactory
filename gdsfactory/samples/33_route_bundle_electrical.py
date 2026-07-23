@@ -1,4 +1,3 @@
-"""Routing bundle requires end ports to be on the same orientation but input can be any orientation."""
 
 from __future__ import annotations
 
@@ -22,7 +21,6 @@ if __name__ == "__main__":
         ports2=[p2["e1"]],
         sort_ports=True,
         cross_section="metal_routing",
-        # router=router,
     )
 
     p3 = c << pad
@@ -38,7 +36,6 @@ if __name__ == "__main__":
         ports2=[p4["e2"]],
         sort_ports=True,
         cross_section="metal_routing",
-        # router=router,
     )
 
     lyrdb = c.connectivity_check(port_types=["electrical", "optical"])

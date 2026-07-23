@@ -62,16 +62,10 @@ component_factory = dict(
 def write_library(
     component_factory: dict[str, ComponentFactory], dirpath: Path
 ) -> None:
-    for function in component_factory.values():
-        component = function()
-        component.write_gds(gdsdir=dirpath, with_metadata=True)
+    pass
 
 
 if __name__ == "__main__":
-    # import pathlib
-    # write_library(component_factory=component_factory, dirpath=pathlib.Path.cwd())
 
     c = ps_heater_doped()
-    # c = ps_heater_metal()
-    # c = ps_pin()
     c.show()

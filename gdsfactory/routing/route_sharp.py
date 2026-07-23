@@ -1,4 +1,3 @@
-"""based on phidl.routing."""
 
 from __future__ import annotations
 
@@ -58,7 +57,6 @@ def path_L(port1: typings.Port, port2: typings.Port) -> Path:
         raise ValueError("path_L(): ports must be orthogonal.")
     e1, _e2 = _get_rotated_basis(port1.orientation)
 
-    # assemble waypoints
     pt1 = np.asarray(port1.center)
     pt3 = port2.center
     delta_vec = pt3 - pt1
@@ -85,7 +83,6 @@ def path_U(port1: typings.Port, port2: typings.Port, length1: float = 200) -> Pa
     theta = np.radians(port1.orientation)
     e1 = np.array([np.cos(theta), np.sin(theta)])
     e2 = np.array([-1 * np.sin(theta), np.cos(theta)])
-    # assemble waypoints
     pt1 = port1.center
     pt4 = port2.center
     pt2 = pt1 + length1 * e1  # outward by length1 distance
@@ -114,7 +111,6 @@ def path_J(
         raise ValueError("path_J(): ports must be orthogonal.")
     e1, _ = _get_rotated_basis(port1.orientation)
     e2, _ = _get_rotated_basis(port2.orientation)
-    # assemble waypoints
     pt1 = port1.center
     pt2 = pt1 + length1 * e1  # outward from port1 by length1
     pt5 = port2.center
@@ -148,7 +144,6 @@ def path_C(
         raise ValueError("path_C(): ports must be parallel.")
     e1, e_left = _get_rotated_basis(port1.orientation)
     e2, _ = _get_rotated_basis(port2.orientation)
-    # assemble route points
     pt1 = port1.center
     pt2 = pt1 + length1 * e1  # outward from port1 by length1
     pt3 = pt2 + left1 * e_left  # leftward by left1
@@ -187,13 +182,11 @@ def path_manhattan(port1: typings.Port, port2: typings.Port, radius: float) -> P
             "path_manhattan(): ports must face parallel or orthogonal directions."
         )
     if orel in (90, 270):
-        # Orthogonal case
         if (
             (orel == 90 and yrel < -1 * radius) or (orel == 270 and yrel > radius)
         ) and xrel > radius:
             pts = path_L(port1, port2)
         else:
-            # Adjust length1 and length2 to ensure intermediate segments fit bend radius
             direction = -1 if (orel == 270) else 1
             length2 = (
                 2 * radius - direction * yrel
@@ -207,7 +200,6 @@ def path_manhattan(port1: typings.Port, port2: typings.Port, radius: float) -> P
     elif orel == 180 and yrel == 0 and xrel > 0:
         pts = path_straight(port1, port2)
     elif (orel == 180 and xrel <= 2 * radius) or (np.abs(yrel) < 2 * radius):
-        # Adjust length1 and left1 to ensure intermediate segments fit bend radius
         left1 = np.abs(yrel) + 2 * radius if (np.abs(yrel) < 4 * radius) else 2 * radius
         y_direction = -1 if (yrel < 0) else 1
         left1 = y_direction * left1
@@ -228,7 +220,6 @@ def path_manhattan(port1: typings.Port, port2: typings.Port, radius: float) -> P
             left1=float(left1),
         )
     else:
-        # Adjust length1 to ensure segment comes out of port2
         length1 = radius + xrel if (orel == 0 and xrel > 0) else radius
         pts = path_U(port1, port2, length1=float(length1))
     return pts
@@ -248,10 +239,8 @@ def path_Z(
         length2: Length of route segment coming out of port2.
 
     """
-    # get basis vectors in port directions
     e1, _ = _get_rotated_basis(port1.orientation)
     e2, _ = _get_rotated_basis(port2.orientation)
-    # assemble route  points
     pt1 = port1.center
     pt2 = pt1 + length1 * e1  # outward from port1 by length1
     pt4 = port2.center
@@ -268,15 +257,12 @@ def path_V(port1: typings.Port, port2: typings.Port) -> Path:
         port1: Start port.
         port2: End port.
     """
-    # Get basis vectors in port directions
     e1, _ = _get_rotated_basis(port1.orientation)
     e2, _ = _get_rotated_basis(port2.orientation)
 
-    # Assemble route points
     pt1 = port1.center
     pt3 = port2.center
 
-    # Solve for intersection
     e = np.column_stack((e1, -1 * e2))
     distance = np.linalg.solve(e, np.asarray(pt3) - pt1)[0]
     pt2 = distance * e1 + pt1

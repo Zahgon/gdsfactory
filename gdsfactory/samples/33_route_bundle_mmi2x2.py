@@ -1,4 +1,3 @@
-"""Route bundle connecting two mmi2x2 components."""
 
 from __future__ import annotations
 

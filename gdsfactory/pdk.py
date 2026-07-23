@@ -1,4 +1,3 @@
-"""PDK stores layers, cross_sections, cell functions ..."""
 
 from __future__ import annotations
 
@@ -46,7 +45,6 @@ cross_section_settings = ["function", "cross_section", "settings"]
 
 
 class GenericConstants(Constants):
-    """Generic PDK constants."""
 
     fiber_input_to_output_spacing: float = 200.0
     metal_spacing: float = 10.0
@@ -67,86 +65,10 @@ def evanescent_coupler_sample() -> None:
 
 
 def extract_args_from_docstring(docstring: str) -> dict[str, Any]:
-    """This function extracts settings from a function's docstring for uPDK format.
-
-    Args:
-        docstring: The function from which to extract YAML in the docstring.
-
-    Returns:
-        settings (dict): The extracted YAML data as a dictionary.
-    """
-    args_dict: dict[str, Any] = {}
-
-    docstring_lines = docstring.split("\n")
-    for line in docstring_lines:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith("Args:"):
-            continue
-        if ":" not in line:
-            continue
-        name, description = line.split(":", 1)
-        name = name.strip()
-        description_parts = description.split("(")
-        doc = description_parts[0].strip()
-        try:
-            min_max_unit = description_parts[1].strip(")").split(",")
-            min_val = float(min_max_unit[0].split(":")[1].strip())
-            max_val = float(min_max_unit[1].split(":")[1].strip())
-            unit = min_max_unit[2].strip()
-        except IndexError:
-            min_val = max_val = 0
-            unit = None
-
-        args_dict[name] = {
-            "doc": doc,
-            "min": min_val,
-            "max": max_val,
-            "type": "float",
-            "unit": unit,
-            "value": (min_val + max_val) / 2,  # setting default value as the midpoint
-        }
-
-    return args_dict
+    pass
 
 
 class Pdk(BaseModel):
-    """Store layers, cross_sections, cell functions, simulation_settings ...
-
-    only one Pdk can be active at a given time.
-
-    Parameters:
-        name: PDK name.
-        version: PDK version.
-        cross_sections: dict of cross_sections factories.
-        cells: dict of parametric cells that return Components.
-        containers: dict of containers that return Components. A container is a cell that contains other cells.
-        models: dict of models names to functions.
-        symbols: dict of symbols names to functions.
-        default_symbol_factory:
-        base_pdks: list of pdks to copy from and extend.
-        default_decorator: decorate all cells, if not otherwise defined on the cell.
-        layers: maps name to gdslayer/datatype.
-            For example dict(si=(1, 0), sin=(34, 0)).
-        layer_stack: maps name to layer numbers, thickness, zmin, sidewall_angle.
-            if can also contain material properties
-            (refractive index, nonlinear coefficient, sheet resistance ...).
-        layer_views: includes layer name to color, opacity and pattern.
-        layer_transitions: transitions between different cross_sections.
-        constants: dict of constants for the PDK.
-        materials_index: material spec names to material spec, which can be:
-            string: material name.
-            float: refractive index.
-            float, float: refractive index real and imaginary part.
-            function: function of wavelength.
-        routing_strategies: functions enabled to route.
-        bend_points_distance: default points distance for bends in um.
-        connectivity: defines connectivity between layers through vias.
-        dbu: database unit in um. Applied to kf.kcl on activate().
-           Default 0.001 (1 nm/dbu).
-
-    """
 
     name: str
     version: str = ""
@@ -186,10 +108,6 @@ class Pdk(BaseModel):
     )
 
     def __init__(self, **data: Any) -> None:
-        # Use model_construct to skip Pydantic re-validation of model instances
-        # (LayerStack, LayerViews, etc.). In long-running processes with hot reload,
-        # class identity can drift causing "Input should be a valid dictionary or
-        # instance of X" errors.
         constructed = Pdk.model_construct(**data)
         object.__setattr__(self, "__dict__", constructed.__dict__)
         object.__setattr__(
@@ -209,24 +127,7 @@ class Pdk(BaseModel):
         self.model_post_init(None)
 
     def model_post_init(self, context: Any) -> None:
-        super().model_post_init(context)
-
-        # update the cross sections, cells and containers from base pdks
-        # precedence goes from first to last base PDK, and then finally to this PDK
-        # (duplicates in the last base PDK will overwrite the others, and this PDK will overwrite that)
-        cross_sections, cells, containers = {}, {}, {}
-        for pdk in self.base_pdks:
-            cross_sections.update(pdk.cross_sections)
-            cells.update(pdk.cells)
-            containers.update(pdk.containers)
-
-        cross_sections.update(self.cross_sections)
-        cells.update(self.cells)
-        containers.update(self.containers)
-
-        self.cross_sections = cross_sections
-        self.cells = cells
-        self.containers = containers
+        pass
 
     def xsection(
         self, func: Callable[..., CrossSection]
@@ -260,17 +161,7 @@ class Pdk(BaseModel):
         _set_active_pdk(self)
 
     def register_cells(self, **kwargs: Any) -> None:
-        """Register cell factories."""
-        for name, cell in kwargs.items():
-            if not callable(cell):
-                raise ValueError(
-                    f"{cell} is not callable, make sure you register "
-                    "cells functions that return a Component"
-                )
-            if name in self.cells:
-                warnings.warn(f"Overwriting cell {name!r}", stacklevel=3)
-
-            self.cells[name] = cell
+        pass
 
     def register_cross_sections(self, **kwargs: Any) -> None:
         """Register cross_sections factories."""
@@ -325,11 +216,7 @@ class Pdk(BaseModel):
             logger.info(f"{message} cell {k!r}")
 
     def remove_cell(self, name: str) -> None:
-        """Removes cell from a PDK."""
-        if name not in self.cells:
-            raise ValueError(f"{name!r} not in {list(self.cells.keys())}")
-        self.cells.pop(name)
-        logger.info(f"Removed cell {name!r}")
+        pass
 
     @overload
     def get_cell(self, cell: CellSpec, **kwargs: Any) -> ComponentFactory: ...
@@ -422,15 +309,7 @@ class Pdk(BaseModel):
         return {**self.cells, **self.containers}
 
     def get_symbol(self, component: ComponentSpec, **kwargs: Any) -> Component:
-        """Returns a component's symbol from a component spec."""
-        # this is a pretty rough first implementation
-        try:
-            return self._get_component(
-                component=component, cells=self.symbols, **kwargs
-            )
-        except ValueError:
-            component = self.get_component(component, **kwargs)
-            return self.default_symbol_factory(component)
+        pass
 
     def _get_component(
         self,
@@ -462,7 +341,6 @@ class Pdk(BaseModel):
                 substring = component
                 matching_cells: list[str] = []
 
-                # Reduce the length of the cell string until we find matches
                 while substring and not matching_cells:
                     matching_cells = [c for c in cells if substring in c]
                     if not matching_cells:
@@ -526,9 +404,6 @@ class Pdk(BaseModel):
             return self.get_cross_section(xs_name, **settings)
         if isinstance(cross_section, CrossSection):
             if kwargs:
-                # apply overrides like the str/factory branches do; the copy
-                # gets a derived name, so it caches separately from the
-                # registered cross_section
                 return cross_section.copy(**kwargs)
             return cross_section
         if isinstance(cross_section, kf.DCrossSection | kf.SymmetricalCrossSection):
@@ -613,66 +488,7 @@ class Pdk(BaseModel):
             raise AttributeError(f"{key!r} not in {constants}") from e
 
     def to_updk(self, exclude: Sequence[str] | None = None) -> str:
-        """Export to uPDK YAML definition."""
-        from gdsfactory.components import bbox_to_points
-
-        exclude = exclude or []
-        _blocks = {
-            cell_name: cell()
-            for cell_name, cell in self.cells.items()
-            if cell_name not in exclude
-        }
-        blocks: dict[str, dict[str, Any]] = {}
-        for name, c in _blocks.items():
-            if c.__doc__ is None:
-                continue
-            extra_args = extract_args_from_docstring(c.__doc__)
-
-            blocks[name] = dict(
-                bbox=bbox_to_points(c.dbbox()),
-                doc=c.__doc__.split("\n")[0],
-                settings=extra_args,
-                parameters={
-                    sname: {
-                        "value": clean_value_json(svalue),
-                        "type": str(svalue.__class__.__name__),
-                        "doc": extra_args.get(sname, {}).get("doc", None),
-                        "min": extra_args.get(sname, {}).get("min", 0),
-                        "max": extra_args.get(sname, {}).get("max", 0),
-                        "unit": extra_args.get(sname, {}).get("unit", None),
-                    }
-                    for sname, svalue in c.settings
-                    if isinstance(svalue, str | float | int)
-                },
-                pins={
-                    port.name: {
-                        "width": port.width,
-                        "xsection": port.cross_section.name
-                        if hasattr(port, "cross_section")
-                        else "",
-                        "xya": [
-                            float(port.center[0]),
-                            float(port.center[1]),
-                            float(port.orientation),
-                        ],
-                        "alias": port.info.get("alias"),
-                        "doc": port.info.get("doc"),
-                    }
-                    for port in c.ports
-                },
-            )
-        xsections = {
-            xs_name: self.get_cross_section(xs_name) for xs_name in self.cross_sections
-        }
-        xsections_widths = {
-            xs_name: dict(width=xsection.width)
-            for xs_name, xsection in xsections.items()
-        }
-
-        header = dict(description=self.name)
-
-        d = {"blocks": blocks, "xsections": xsections_widths, "header": header}
-        return yaml.safe_dump(d)
+        pass
 
     def get_cross_section_name(self, cross_section: CrossSection) -> str:
         xs_name = next(
@@ -687,28 +503,7 @@ class Pdk(BaseModel):
 
     @cached_property
     def klayout_technology(self) -> klayout_tech.KLayoutTechnology:
-        """Returns a KLayoutTechnology from the PDK.
-
-        Raises:
-            UserWarning if required properties for generating a KLayoutTechnology are not defined.
-        """
-        try:
-            layer_views_obj = None
-            if self.layer_views is not None:
-                layer_views_obj = self.get_layer_views()
-
-            return klayout_tech.KLayoutTechnology(
-                name=self.name,
-                layer_views=layer_views_obj,
-                connectivity=self.connectivity,
-                layer_map=self.layers,  # type: ignore[arg-type]
-                layer_stack=self.layer_stack,
-            )
-        except AttributeError as e:
-            raise UserWarning(
-                "Required properties for generating a KLayoutTechnology are not defined. "
-                "Check the error for missing property"
-            ) from e
+        pass
 
 
 def get_active_pdk(name: str | None = None) -> Pdk:
@@ -753,12 +548,7 @@ def get_active_pdk(name: str | None = None) -> Pdk:
 
 
 def get_material_index(material: MaterialSpec, *args: Any, **kwargs: Any) -> Component:
-    active_pdk = get_active_pdk()
-    if not hasattr(active_pdk, "get_material_index"):
-        raise NotImplementedError(
-            "The active PDK does not implement 'get_material_index'"
-        )
-    return active_pdk.get_material_index(material, *args, **kwargs)  # type: ignore[no-any-return]
+    pass
 
 
 def get_component(
@@ -835,7 +625,6 @@ def _set_active_pdk(pdk: Pdk) -> None:
 
     if pdk.layers is not None:
         kf.kcl.layers = pdk.layers
-        # LayerInfos registers missing physical layers, so restore enum indexes first.
         _ensure_pdk_layers_registered(pdk)
         kf.kcl.infos = kf.LayerInfos(
             **{v.name: kf.kdb.LayerInfo(v.layer, v.datatype) for v in pdk.layers},  # type: ignore[attr-defined]

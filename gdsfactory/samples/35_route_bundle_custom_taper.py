@@ -1,4 +1,3 @@
-"""Route bundle with a custom taper component for auto-tapering."""
 
 from __future__ import annotations
 

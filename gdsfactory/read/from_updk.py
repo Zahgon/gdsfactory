@@ -1,7 +1,3 @@
-"""Read uPDK YAML definition and returns a gdsfactory script.
-
-https://openepda.org/index.html
-"""
 
 from __future__ import annotations
 

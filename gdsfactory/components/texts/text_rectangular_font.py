@@ -24,33 +24,7 @@ def pixel_array(
     pixel_size: float = 10.0,
     layer: LayerSpec = "M1",
 ) -> Component:
-    """Returns a pixel component from a string representing the pixels.
-
-    Args:
-        pixels: string representing the pixels
-        pixel_size: width/height for each pixel
-        layer: layer for each pixel
-    """
-    component = Component()
-    lines = [line for line in pixels.split("\n") if len(line) > 0]
-    lines.reverse()
-    i = 0
-    i_max = 0
-    a = pixel_size
-    for j, line in enumerate(lines):
-        i = 0
-        for c in line:
-            if c in ["X", "1"]:
-                pixel = [
-                    (i * a, j * a),
-                    ((i + 1) * a, j * a),
-                    ((i + 1) * a, (j + 1) * a),
-                    (i * a, (j + 1) * a),
-                ]
-                component.add_polygon(pixel, layer=layer)
-            i += 1
-        i_max = max(i_max, i)
-    return component
+    pass
 
 
 FONT = """\
@@ -305,21 +279,4 @@ _
 
 @cache
 def rectangular_font() -> dict[str, str]:
-    """Returns a rectangular font dict The keys of the dictionary are the.
-
-    characters The values are the pixel representation of the character.
-    """
-    characters = {}
-    lines = FONT.split("\n")
-    while lines:
-        line = lines.pop(0)
-        if not line:
-            break
-        charac = line[0]
-
-        pixels = "".join(
-            lines.pop(0).replace("\t", "").replace(" ", "") + "\n" for _i in range(5)
-        )
-
-        characters[charac] = pixels
-    return characters
+    pass

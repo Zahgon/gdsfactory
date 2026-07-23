@@ -1,4 +1,3 @@
-"""Adiabatic tapers from CSV files."""
 
 from __future__ import annotations
 
@@ -33,55 +32,7 @@ def taper_from_csv(
     filepath: Path = data / "taper_strip_0p5_3_36.csv",
     cross_section: CrossSectionSpec = "strip",
 ) -> Component:
-    """Returns taper from CSV file.
-
-    Args:
-        filepath: for CSV file.
-        cross_section: specification (CrossSection, string, CrossSectionFactory dict).
-    """
-    import pandas as pd
-
-    taper_data = pd.read_csv(filepath)
-    xs: list[float] = taper_data["x"].values * 1e6
-    ys: npt.NDArray[np.float64] = np.round(taper_data["width"].values * 1e6 / 2.0, 3)
-
-    x = gf.get_cross_section(cross_section)
-    layer = x.layer
-
-    c = gf.Component()
-    c.add_polygon(
-        list(zip(xs, ys, strict=False)) + list(zip(xs, -ys, strict=False))[::-1],
-        layer=layer,
-    )
-
-    for section in x.sections[1:]:
-        ys_trench = ys + section.width
-        c.add_polygon(
-            [(float(x), float(y)) for x, y in zip(xs, ys_trench, strict=False)]
-            + [(float(x), float(y)) for x, y in zip(xs, -ys_trench, strict=False)][
-                ::-1
-            ],
-            layer=section.layer,
-        )
-
-    c.add_port(
-        name="o1",
-        center=(xs[0], 0),
-        width=2 * ys[0],
-        orientation=180,
-        layer=layer,
-        cross_section=x,
-    )
-    c.add_port(
-        name="o2",
-        center=(xs[-1], 0),
-        width=2 * ys[-1],
-        orientation=0,
-        layer=layer,
-        cross_section=x,
-    )
-    x.add_bbox(c)
-    return c
+    pass
 
 
 taper_0p5_to_3_l36 = partial(taper_from_csv, filepath=data / "taper_strip_0p5_3_36.csv")

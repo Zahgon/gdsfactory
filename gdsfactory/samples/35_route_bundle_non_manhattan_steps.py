@@ -1,9 +1,3 @@
-"""Sample route_bundle with non-Manhattan steps.
-
-Steps that combine dx and dy in a single step produce a diagonal
-(non-Manhattan) waypoint. The router automatically inserts corner
-points to convert these into Manhattan-compatible segments.
-"""
 
 from __future__ import annotations
 
@@ -18,8 +12,6 @@ if __name__ == "__main__":
     c2 = c << gf.components.mmi2x2()
     c2.move((200, 240))
 
-    # A single step with both dx and dy creates a non-Manhattan waypoint.
-    # The router splits the diagonal into horizontal + vertical segments.
     gf.routing.route_bundle(
         c,
         [c1.ports["o3"], c1.ports["o4"]],

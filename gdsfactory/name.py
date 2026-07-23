@@ -1,4 +1,3 @@
-"""Define names, clean values for names."""
 
 from __future__ import annotations
 
@@ -33,7 +32,6 @@ def join_first_letters(name: str) -> str:
     return "".join([x[0] for x in name.split("_") if x])
 
 
-# replace function_name prefix for some components
 component_type_to_name = {"phidl": "phidl"}
 
 
@@ -68,7 +66,6 @@ def dict2name(prefix: str = "", **kwargs: Any) -> str:
     for key in sorted(kwargs):
         if key not in ignore_from_name and isinstance(key, str):
             value = kwargs[key]
-            # key = join_first_letters(key).upper()
             if value is not None:
                 kv += [f"{key}{clean_value(value)}"]
     label = prefix + "_".join(kv)
@@ -120,19 +117,15 @@ def clean_name(
     Returns:
         str: The cleaned name.
     """
-    # Default allowed characters, including underscore
     allowed = r"a-zA-Z0-9_"
 
     allowed_characters = allowed_characters or []
 
-    # Add additional allowed characters
     for char in allowed_characters:
         allowed += re.escape(char)
 
-    # Pattern for characters to be replaced
     pattern = f"[^{allowed}]"
 
-    # Replacements map
     replace_map = {
         " ": "_",
         "!": "",
@@ -159,9 +152,8 @@ def clean_name(
     if remove_dots:
         replace_map["."] = ""
 
-    # Replace characters using the replace_map
     def replace_match(match: re.Match[str]) -> str:
-        return replace_map.get(match.group(0), "")
+        pass
 
     return re.sub(pattern, replace_match, name)
 
@@ -173,7 +165,7 @@ def clean_value(value: Any) -> str:
 
 
 def test_clean_name() -> None:
-    assert clean_name("wg(:_=_2852") == "wg___2852"
+    pass
 
 
 def get_instance_name_from_alias(reference: ComponentReference) -> str:
@@ -215,15 +207,12 @@ def get_instance_name_from_label(
     y = reference.y
     labels = component.labels
 
-    # default instance name follows component.aliases
     text = clean_name(f"{reference.cell.name}_{x}_{y}")
 
-    # try to get the instance name from a label
     for label in labels:
         xl = label.dposition[0]
         yl = label.dposition[1]
         if x == xl and y == yl and label.layer == layer:
-            # print(label.text, xl, yl, x, y)
             return str(label.text)
 
     return text

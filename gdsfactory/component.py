@@ -1,4 +1,3 @@
-"""Component is a canvas for geometry."""
 
 from __future__ import annotations
 
@@ -70,7 +69,7 @@ def _fix_pin_metadata(cell: kf.kcell.ProtoTKCell[Any]) -> None:
 
 
 class AddPortError(ValueError):
-    """Error raised when adding a port fails."""
+    pass
 
 
 if TYPE_CHECKING:
@@ -105,11 +104,9 @@ type _PolygonPoints = "npt.NDArray[np.floating[Any]] | kdb.DPolygon | kdb.Polygo
 
 
 def ensure_tuple_of_tuples(points: Any) -> tuple[tuple[float, float], ...]:
-    # Convert a single NumPy array to a tuple of tuples
     if isinstance(points, np.ndarray):
         points = tuple(map(tuple, points.tolist()))
     elif isinstance(points, list):
-        # If it's a list, check if the first element is an np.ndarray or a list to decide on conversion
         if len(points) > 0 and isinstance(points[0], np.ndarray | list):
             points = tuple(tuple(point) for point in points)
     return cast("tuple[tuple[float, float], ...]", points)
@@ -129,19 +126,19 @@ def size(region: kdb.Region, offset: float, dbu: float = 1e3) -> kdb.Region:
 
 
 def boolean_or(region1: kdb.Region, region2: kdb.Region) -> kdb.Region:
-    return (region1.__or__(region2)).merge()
+    pass
 
 
 def boolean_not(region1: kdb.Region, region2: kdb.Region) -> kdb.Region:
-    return kdb.Region.__sub__(region1, region2)
+    pass
 
 
 def boolean_xor(region1: kdb.Region, region2: kdb.Region) -> kdb.Region:
-    return kdb.Region.__xor__(region1, region2)
+    pass
 
 
 def boolean_and(region1: kdb.Region, region2: kdb.Region) -> kdb.Region:
-    return kdb.Region.__and__(region1, region2)
+    pass
 
 
 boolean_operations = {
@@ -165,18 +162,6 @@ ComponentReference: TypeAlias = DInstance  # noqa: UP040
 
 
 class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
-    """Canvas where you add polygons, instances and ports.
-
-    - stores settings that you use to build the component
-    - stores info that you want to use
-    - can return ports by type (optical, electrical ...)
-    - can return netlist for circuit simulation
-    - can write to GDS, OASIS
-    - can show in KLayout, matplotlib or 3D
-
-    Properties:
-        info: dictionary that includes derived properties, simulation_settings, settings (test_protocol, docs, ...)
-    """
 
     @property
     def layers(self) -> list[Layer]:
@@ -231,7 +216,6 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
 
         from gdsfactory.pdk import get_active_pdk, get_cross_section, get_layer
 
-        # Resolve initial values and determine if we need to override the transformation
         override_transformation = False
         if port:
             override_transformation = (center is not None) or (orientation is not None)
@@ -253,7 +237,6 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
                 else getattr(port, "cross_section", _xs)
             )
 
-        # Apply CrossSection overrides
         xs_name = None
         if cross_section:
             xs = get_cross_section(cross_section)
@@ -263,7 +246,6 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
             if width is None:
                 width = xs.width
 
-        # Apply defaults if None
         if port_type is None:
             port_type = "optical"
         if orientation is None:
@@ -283,8 +265,6 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
         if center is None:
             raise AddPortError("Must specify center or port")
 
-        # Prefer port.dcplx_trans if port is provided and no overriding parameters are given
-        # Otherwise, construct a new transformation based on the provided or inherited parameters
         if not port or override_transformation:
             if isinstance(center, kdb.DPoint):
                 trans = kdb.DCplxTrans(1, orientation, False, center.to_v())
@@ -298,9 +278,6 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
 
         layer = get_layer(layer)
 
-        # preserve metadata from the source port (a resolved cross_section
-        # below takes precedence over any inherited one); deep copy so list/
-        # dict info values aren't shared with the source port.
         info = (
             port.info.model_copy(deep=True).model_dump() if port is not None else None
         )
@@ -503,41 +480,12 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
         return pathlib.Path(gdspath)
 
     def pprint_ports(self, **kwargs: Any) -> None:
-        """Pretty prints ports.
-
-        Args:
-            kwargs: keyword arguments to filter ports.
-
-        Keyword Args:
-            layer: select ports with GDS layer.
-            prefix: select ports with prefix in port name.
-            suffix: select ports with port name suffix.
-            orientation: select ports with orientation in degrees.
-            orientation: select ports with orientation in degrees.
-            width: select ports with port width.
-            layers_excluded: List of layers to exclude.
-            port_type: select ports with port_type (optical, electrical, vertical_te).
-            clockwise: if True, sort ports clockwise, False: counter-clockwise.
-        """
-        ports = self.get_ports_list(**kwargs)
-        from gdsfactory.port import pprint_ports
-
-        pprint_ports(ports)
+        pass
 
     def write_netlist(
         self, netlist: dict[str, Any], filepath: str | pathlib.Path | None = None
     ) -> str:
-        """Returns netlist as YAML string.
-
-        Args:
-            netlist: netlist to write.
-            filepath: Optional file path to write to.
-        """
-        yaml_string = yaml.safe_dump(netlist)
-        if filepath:
-            filepath = pathlib.Path(filepath)
-            filepath.write_text(yaml_string)
-        return yaml_string
+        pass
 
     def to_dict(self, with_ports: bool = False) -> dict[str, Any]:
         """Returns a dictionary representation of the Component."""
@@ -569,60 +517,7 @@ class ComponentBase(ProtoKCell[float, BaseKCell], ABC):
         port_matcher: PortMatcher | None = None,
         serialization_max_digits: int = DEFAULT_SERIALIZATION_MAX_DIGITS,
     ) -> dict[str, Any]:
-        """Returns a place-aware netlist for circuit simulation.
-
-        It includes not only the connectivity information (nodes and connections)
-        but also the specific placement coordinates for each component or cell
-        in the layout.
-
-        Args:
-            recursive: if True, returns a recursive netlist.
-            on_multi_connect: What to do when more than two ports overlap.
-                "ignore": silently allow, "warn": allow with warning, "error": raise.
-            on_dangling_port: What to do when an instance port is not connected.
-                "ignore": silently allow, "warn": allow with warning, "error": raise.
-            instance_namer: Callable to name instances.
-                Defaults to SmartNamer(component_namer).
-            component_namer: Callable to name components.
-                Defaults to function_namer.
-            netlist_namer: Callable to name cells in recursive netlists.
-                Defaults to CountedNetlistNamer(component_namer). Only used when
-                recursive=True.
-            port_matcher: Callable to determine if two ports are connected.
-                Defaults to SmartPortMatcher().
-            serialization_max_digits: How many float digits to preserve.
-                Defaults to DEFAULT_SERIALIZATION_MAX_DIGITS
-        """
-        from gdsfactory.get_netlist import (
-            function_namer,
-            get_netlist,
-            get_netlist_recursive,
-        )
-
-        if component_namer is None:
-            component_namer = function_namer
-
-        if recursive:
-            return get_netlist_recursive(
-                self,  # type: ignore[arg-type]
-                on_multi_connect=on_multi_connect,
-                on_dangling_port=on_dangling_port,
-                instance_namer=instance_namer,
-                component_namer=component_namer,
-                netlist_namer=netlist_namer,
-                port_matcher=port_matcher,
-                serialization_max_digits=serialization_max_digits,
-            )
-
-        return get_netlist(
-            self,  # type: ignore[arg-type]
-            on_multi_connect=on_multi_connect,
-            on_dangling_port=on_dangling_port,
-            instance_namer=instance_namer,
-            component_namer=component_namer,
-            port_matcher=port_matcher,
-            serialization_max_digits=serialization_max_digits,
-        )
+        pass
 
     def add_ref_off_grid(
         self, component: AnyComponent, name: str | None = None
@@ -648,18 +543,6 @@ type Route = (
 
 
 class Component(ComponentBase, kf.DKCell):
-    """Canvas where you add polygons, instances and ports.
-
-    - stores settings that you use to build the component
-    - stores info that you want to use
-    - can return ports by type (optical, electrical ...)
-    - can return netlist for circuit simulation
-    - can write to GDS, OASIS
-    - can show in KLayout, matplotlib or 3D
-
-    Properties:
-        info: dictionary that includes derived properties, simulation_settings, settings (test_protocol, docs, ...)
-    """
 
     routes: dict[str, Route] = Field(default_factory=dict)
 
@@ -745,22 +628,7 @@ class Component(ComponentBase, kf.DKCell):
             self.kdb_cell.insert(instance.instance)
 
     def absorb(self, reference: ComponentReference) -> Self:
-        """Absorbs polygons from ComponentReference into Component.
-
-        Destroys the reference in the process but keeping the polygon geometry.
-
-        Args:
-            reference: Instance to be absorbed into the Component.
-
-        """
-        if self.locked:
-            raise LockedError(self)
-        if reference not in self.insts:
-            raise ValueError(
-                "The reference you asked to absorb does not exist in this Component."
-            )
-        reference.flatten()
-        return self
+        pass
 
     def trim(
         self,
@@ -874,30 +742,7 @@ class Component(ComponentBase, kf.DKCell):
         return paths
 
     def get_boxes(self, layer: LayerSpec, recursive: bool = True) -> list[kf.kdb.DBox]:
-        """Returns a list of boxes.
-
-        Args:
-            layer: layer to get boxes from.
-            recursive: if True, gets boxes recursively.
-        """
-        from gdsfactory import get_layer
-
-        boxes: list[kf.kdb.DBox] = []
-
-        layer = get_layer(layer)
-
-        if recursive:
-            iterator = self.kdb_cell.begin_shapes_rec(layer)
-            iterator.shape_flags = kdb.Shapes.SBoxes
-            boxes.extend(
-                it.shape().dbox.transformed(it.dtrans()) for it in iterator.each()
-            )
-        else:
-            boxes.extend(
-                shape.dbox
-                for shape in self.kdb_cell.shapes(layer).each(kdb.Shapes.SBoxes)
-            )
-        return boxes
+        pass
 
     def get_labels(
         self, layer: LayerSpec, recursive: bool = True
@@ -1023,41 +868,7 @@ class Component(ComponentBase, kf.DKCell):
         layer_map: dict[LayerSpec, LayerSpec],
         recursive: bool = False,
     ) -> Self:
-        """Remaps a list of layers and returns the same Component.
-
-        Args:
-            layer_map: dictionary of layers to copy.
-            recursive: if True, remaps layers recursively.
-        """
-        from gdsfactory import get_layer
-
-        if recursive:
-            self.locked = False
-
-        if self.locked:
-            raise LockedError(self)
-
-        layer_index_pairs = [
-            (get_layer(layer), get_layer(new_layer))
-            for layer, new_layer in layer_map.items()
-        ]
-        kdb_cell = self.kdb_cell
-        for src_layer_index, dst_layer_index in layer_index_pairs:
-            kdb_cell.copy(src_layer_index, dst_layer_index)
-
-        if recursive:
-            for ci in kdb_cell.called_cells():
-                child = self.kcl[ci]
-                child_cell = child.kdb_cell
-                was_locked = child.locked
-                child.locked = False
-                try:
-                    for src_layer_index, dst_layer_index in layer_index_pairs:
-                        child_cell.copy(src_layer_index, dst_layer_index)
-                finally:
-                    if was_locked:
-                        child.locked = True
-        return self
+        pass
 
     def remove_layers(
         self,
@@ -1107,31 +918,7 @@ class Component(ComponentBase, kf.DKCell):
     def remap_layers(
         self, layer_map: dict[LayerSpec, LayerSpec], recursive: bool = False
     ) -> Self:
-        """Remaps a list of layers and returns the same Component.
-
-        Args:
-            layer_map: dictionary of layers to remap.
-            recursive: if True, remaps layers recursively.
-        """
-        from gdsfactory import get_layer
-
-        if self.locked:
-            raise LockedError(self)
-
-        layer_index_pairs = [
-            (get_layer(layer), get_layer(new_layer))
-            for layer, new_layer in layer_map.items()
-        ]
-        kdb_cell = self.kdb_cell
-        for src_layer_index, dst_layer_index in layer_index_pairs:
-            kdb_cell.move(src_layer_index, dst_layer_index)
-
-        if recursive:
-            for ci in kdb_cell.called_cells():
-                child_cell = self.kcl[ci].kdb_cell
-                for src_layer_index, dst_layer_index in layer_index_pairs:
-                    child_cell.move(src_layer_index, dst_layer_index)
-        return self
+        pass
 
     def to_3d(
         self,
@@ -1166,33 +953,7 @@ class Component(ComponentBase, kf.DKCell):
         remove_old_layer: bool = True,
         corner_mode: int | CornerMode = 2,
     ) -> None:
-        """Returns a Component over-under on a layer in the Component.
-
-        For big components use tiled version.
-
-        Args:
-            layer: layer to perform over-under on.
-            distance: distance to perform over-under in um.
-            remove_old_layer: if True, removes the old layer.
-            corner_mode: determines behavior around corners
-        """
-        from gdsfactory import get_layer
-
-        if self.locked:
-            raise LockedError(self)
-
-        distance_dbu = self.kcl.to_dbu(distance)
-
-        layer_index = get_layer(layer)
-        region = kdb.Region(self.kdb_cell.begin_shapes_rec(layer_index))
-        region.size(+distance_dbu, +distance_dbu, corner_mode).size(
-            -distance_dbu, -distance_dbu, corner_mode
-        )
-
-        if remove_old_layer:
-            self.remove_layers([layer])
-        self.kdb_cell.shapes(layer_index).insert(region)
-        self.kcl.layout.end_changes()
+        pass
 
     def fix_spacing(
         self,
@@ -1200,27 +961,7 @@ class Component(ComponentBase, kf.DKCell):
         min_space: float = 0.2,
         size_bias: float = 0.0,
     ) -> None:
-        """Fixes layer spacing in the Component.
-
-        Args:
-            layer: layer to fix spacing on.
-            min_space: minimum space in um.
-            size_bias: optional geometry bias applied after spacing fix (um).
-        """
-        import gdsfactory as gf
-        from gdsfactory.pdk import get_layer
-
-        layer = get_layer(layer)
-        layer_info = gf.kcl.get_info(layer)
-        fix = fix_spacing_tiled(
-            self.to_itype(), min_space=self.kcl.to_dbu(min_space), layer=layer_info
-        )
-        if size_bias:
-            size_offset_dbu = self.kcl.to_dbu(size_bias)
-            fix = fix.sized(+size_offset_dbu)
-            fix = fix.sized(-size_offset_dbu)
-
-        self.shapes(layer).insert(fix)
+        pass
 
     def fix_width(
         self,
@@ -1232,36 +973,7 @@ class Component(ComponentBase, kf.DKCell):
         smooth: int | None = None,
         flatten: bool = True,
     ) -> None:
-        """Fixes layer min width in the Component.
-
-        Args:
-            layer: layer to fix width on.
-            min_width: minimum width in um.
-            n_threads: number of threads to use for processing.
-            tile_size: size of the tiles to use for processing.
-            overlap: overlap between tiles.
-            smooth: smooth the polygons by this amount in um.
-            flatten: if True, flattens the Component before fixing width.
-        """
-        import gdsfactory as gf
-        from gdsfactory.pdk import get_layer
-
-        if flatten:
-            self.flatten()
-        layer = get_layer(layer)
-        layer_info = gf.kcl.get_info(layer)
-
-        fix = fix_width_minkowski_tiled(
-            self.to_itype(),
-            min_width=self.kcl.to_dbu(min_width),
-            ref=layer_info,
-            n_threads=n_threads,
-            tile_size=tile_size,
-            overlap=overlap,
-            smooth=smooth,
-        )
-        cast(kdb.Shapes, self.shapes(layer)).clear()  # type: ignore[redundant-cast]
-        self.shapes(layer).insert(fix)
+        pass
 
     def offset(
         self,
@@ -1353,83 +1065,7 @@ class Component(ComponentBase, kf.DKCell):
         return_fig: bool = False,
         ax: Axes | None = None,
     ) -> Figure | None:
-        """Plots the Component using klayout.
-
-        Args:
-            lyrdb: path to layer properties file.
-            display_type: if "image", displays the image.
-            show_labels: if True, shows labels.
-            show_ruler: if True, shows ruler.
-            pixel_buffer_options: options for KLayout's get_pixels_with_options.
-                If None, uses default values (width=800, height=600, linewidth=0,
-                oversampling=0, resolution=0).
-            return_fig: if True, returns the figure.
-            ax: Optional matplotlib Axes to plot on. If None, creates a new figure and axes. When specified, fig_size and dpi are determined by the provided axes' figure.
-        """
-        from io import BytesIO
-
-        import matplotlib.pyplot as plt
-
-        from gdsfactory.pdk import get_layer_views
-
-        self.insert_vinsts()
-
-        lyp_path = GDSDIR_TEMP / "layer_properties.lyp"
-        layer_views = get_layer_views()
-        layer_views.to_lyp(filepath=lyp_path)
-
-        layout_view = lay.LayoutView()
-        cell_view_index = layout_view.create_layout(True)
-        layout_view.active_cellview_index = cell_view_index
-        cell_view = layout_view.cellview(cell_view_index)
-        layout = cell_view.layout()
-        layout.assign(kf.kcl.layout)
-
-        assert self.name is not None, "Component name is None"
-
-        cell_view.cell = layout.cell(self.name)
-
-        layout_view.max_hier()
-        layout_view.load_layer_props(str(lyp_path))
-
-        layout_view.add_missing_layers()
-        layout_view.zoom_fit()
-
-        layout_view.set_config("text-visible", "true" if show_labels else "false")
-        layout_view.set_config("grid-show-ruler", "true" if show_ruler else "false")
-
-        pixel_buffer = layout_view.get_pixels_with_options(
-            **cast(
-                dict[str, Any],
-                ({"width": 800, "height": 600} | (pixel_buffer_options or {})),
-            )
-        )
-        png_data = pixel_buffer.to_png_data()
-
-        # Convert PNG data to NumPy array and display with matplotlib
-        with BytesIO(png_data) as f:
-            img_array = plt.imread(f)
-
-        # Compute the figure dimensions based on the image size and desired DPI
-        dpi = 80
-        fig_width = img_array.shape[1] / dpi
-        fig_height = img_array.shape[0] / dpi
-
-        if ax is not None:
-            fig = plt.gcf()  # Get the current figure (global figure, not subfigure)
-        else:
-            fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=dpi)
-
-        # Remove margins and display the image
-        ax.imshow(img_array)
-        ax.axis("off")  # Hide axes
-        ax.set_position((0, 0, 1, 1))  # Set axes to occupy the full figure space
-
-        plt.subplots_adjust(
-            left=0, right=1, top=1, bottom=0, wspace=0, hspace=0
-        )  # Remove any padding
-        plt.tight_layout(pad=0)  # Ensure no space is wasted
-        return fig if return_fig else None
+        pass
 
     def plot_netlist(
         self,
@@ -1438,99 +1074,15 @@ class Component(ComponentBase, kf.DKCell):
         font_weight: str = "normal",
         **kwargs: Any,
     ) -> nx.Graph:
-        """Plots a netlist graph with networkx.
-
-        Args:
-            recursive: if True, returns a recursive netlist.
-            with_labels: add label to each node.
-            font_weight: normal, bold.
-            kwargs: keyword arguments to get_netlist.
-
-        Keyword Args:
-            tolerance: tolerance in grid_factor to consider two ports connected.
-            exclude_port_types: optional list of port types to exclude from netlisting.
-            get_instance_name: function to get instance name.
-            allow_multiple: False to raise an error if more than two ports share the same connection. \
-                    if True, will return key: [value] pairs with [value] a list of all connected instances.
-        """
-        import matplotlib.pyplot as plt
-        import networkx as nx
-
-        plt.figure()
-        netlist = self.get_netlist(recursive=recursive, **kwargs)
-        G = nx.Graph()
-
-        if recursive:
-            pos: dict[str, tuple[float, float]] = {}
-            labels: dict[str, str] = {}
-            for net in netlist.values():
-                nets = net.get("nets", [])
-                connections = net.get("connections", {})
-                connections = nets_to_connections(nets, connections)
-                placements = net["placements"]
-                G.add_edges_from(
-                    [
-                        (",".join(k.split(",")[:-1]), ",".join(v.split(",")[:-1]))
-                        for k, v in connections.items()
-                    ]
-                )
-                pos |= {k: (v["x"], v["y"]) for k, v in placements.items()}
-                labels |= {k: ",".join(k.split(",")[:1]) for k in placements}
-
-        else:
-            nets = netlist.get("nets", [])
-            connections = netlist.get("connections", {})
-            connections = nets_to_connections(nets, connections)
-            placements = netlist["placements"]
-            G.add_edges_from(
-                [
-                    (",".join(k.split(",")[:-1]), ",".join(v.split(",")[:-1]))
-                    for k, v in connections.items()
-                ]
-            )
-            pos = {k: (v["x"], v["y"]) for k, v in placements.items()}
-            labels = {k: ",".join(k.split(",")[:1]) for k in placements}
-
-        nx.draw(
-            G,
-            with_labels=with_labels,
-            font_weight=font_weight,
-            labels=labels,
-            pos=pos,
-        )
-        return G
+        pass
 
     def plot_netlist_graphviz(
         self, recursive: bool = False, interactive: bool = False, splines: str = "ortho"
     ) -> None:
-        """Plots a netlist graph with graphviz.
-
-        Args:
-            recursive: if True, returns a recursive netlist.
-            interactive: if True, opens the graph in a browser.
-            splines: ortho, spline, polyline, line, curved.
-        """
-        from gdsfactory.schematic import plot_graphviz
-
-        n = self.to_graphviz(
-            recursive=recursive,
-        )
-        plot_graphviz(n, splines=splines, interactive=interactive)
+        pass
 
     def to_graphviz(self, recursive: bool = False) -> Digraph:
-        """Returns a netlist graph with graphviz.
-
-        Args:
-            recursive: if True, returns a recursive netlist.
-        """
-        from gdsfactory.schematic import to_graphviz
-
-        netlist = self.get_netlist(recursive=recursive)
-        return to_graphviz(
-            netlist["instances"],
-            placements=netlist["placements"],
-            nets=netlist["nets"],
-        )
+        pass
 
     def fill(
         self,
@@ -1548,69 +1100,12 @@ class Component(ComponentBase, kf.DKCell):
         tile_border: tuple[float, float] = (20, 20),
         multi: bool = False,
     ) -> None:
-        """Fill a [KCell][kfactory.kcell.KCell].
-
-        Args:
-            fill_cell: The cell used as a cell to fill the regions.
-            fill_layers: Tuples of layer and keepout in um.
-            fill_regions: Specific regions to fill. Also tuples like the layers.
-            exclude_layers: Layers to ignore. Tuples like the fill layers
-            exclude_regions: Specific regions to ignore. Tuples like the fill layers.
-            n_threads: Max number of threads used. Defaults to number of cores of the
-                machine.
-            tile_size: Size of the tiles in um.
-            row_step: DVector for steping to the next instance position in the row.
-                x-coordinate must be >= 0.
-            col_step: DVector for steping to the next instance position in the column.
-                y-coordinate must be >= 0.
-            x_space: Spacing between the fill cell bounding boxes in x-direction.
-            y_space: Spacing between the fill cell bounding boxes in y-direction.
-            tile_border: The tile border to consider for excludes
-            multi: Use the region_fill_multi strategy instead of single fill.
-        """
-        from gdsfactory.pdk import get_component, get_layer_info
-
-        fill_cell = get_component(fill_cell)
-        fill_layers_converted = [
-            (get_layer_info(layer), int(spacing)) for layer, spacing in fill_layers
-        ]
-        fill_regions_converted = [
-            (region, int(spacing)) for region, spacing in fill_regions
-        ]
-        exclude_layers_converted = [
-            (get_layer_info(layer), int(spacing)) for layer, spacing in exclude_layers
-        ]
-        exclude_regions_converted = [
-            (region, int(spacing)) for region, spacing in exclude_regions
-        ]
-
-        fill_tiled(
-            self,
-            fill_cell=fill_cell,
-            fill_layers=fill_layers_converted,
-            fill_regions=fill_regions_converted,
-            exclude_layers=exclude_layers_converted,
-            exclude_regions=exclude_regions_converted,
-            n_threads=n_threads,
-            tile_size=tile_size,
-            row_step=row_step,
-            col_step=col_step,
-            x_space=x_space,
-            y_space=y_space,
-            tile_border=tile_border,
-            multi=multi,
-        )
+        pass
 
 
 class ComponentAllAngle(ComponentBase, kf.VKCell):
     def plot(self, **kwargs: Any) -> None:
-        """Plots the Component using klayout."""
-        c = Component()
-        if self.name is not None:
-            c.name = self.name
-
-        VInstance(self).insert_into_flat(c, levels=0)
-        c.plot(**kwargs)
+        pass
 
     def dup(self, new_name: str | None = None) -> ComponentAllAngle:
         """Copy the full cell."""
@@ -1686,38 +1181,4 @@ def container(
 def nets_to_connections(
     nets: list[dict[str, Any]], connections: dict[str, Any]
 ) -> dict[str, str]:
-    # Use the given connections; create a shallow copy to avoid mutating the input.
-    connections = dict(connections)
-
-    # Flat set of all used ports for O(1) membership check.
-    used = set(connections.keys())
-    used.update(connections.values())
-
-    for net in nets:
-        p = net["p1"]
-        q = net["p2"]
-        if p in used:
-            # Find the already connected q (if any)
-            _q = (
-                connections[p]
-                if p in connections
-                else next(k for k, v in connections.items() if v == p)
-            )
-            raise ValueError(
-                "SAX currently does not support multiply connected ports. "
-                f"Got {p}<->{q} and {p}<->{_q}"
-            )
-        if q in used:
-            _p = (
-                connections[q]
-                if q in connections
-                else next(k for k, v in connections.items() if v == q)
-            )
-            raise ValueError(
-                "SAX currently does not support multiply connected ports. "
-                f"Got {p}<->{q} and {_p}<->{q}"
-            )
-        connections[p] = q
-        used.add(p)
-        used.add(q)
-    return connections
+    pass

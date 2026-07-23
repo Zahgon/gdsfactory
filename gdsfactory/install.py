@@ -1,4 +1,3 @@
-"""Install Klayout and GIT plugins."""
 
 from __future__ import annotations
 
@@ -45,7 +44,6 @@ def make_link(src: pathlib.Path, dest: pathlib.Path, overwrite: bool = True) -> 
         print("Could not create symlink!")
         print("     Error: ", err)
         if sys.platform == "win32":
-            # https://stackoverflow.com/questions/32877260/privlege-error-trying-to-create-symlink-using-python-on-windows-10
             shutil.copytree(src, dest)
             print("Copied directory:")
     print(f"From: {src}")
@@ -83,24 +81,19 @@ def _write_git_attributes() -> None:
     git_config.mkdir(exist_ok=True, parents=True)
     line_to_add = "*.gds diff=gdsdiff\n"
 
-    # Specify the path to the .config/git/attributes file
     dirpath = home / ".config" / "git"
     dirpath.mkdir(exist_ok=True, parents=True)
     file_path = dirpath / "attributes"
 
-    # Read the file to check if the line already exists
     file_content = file_path.read_text() if file_path.exists() else ""
 
-    # Add the line only if it doesn't exist
     if line_to_add not in file_content:
         with open(file_path, "a") as file:
             file.write(line_to_add)
 
 
 def get_klayout_path() -> pathlib.Path:
-    """Returns KLayout path."""
-    klayout_folder = "KLayout" if sys.platform == "win32" else ".klayout"
-    return home / klayout_folder
+    pass
 
 
 def copy(src: pathlib.Path, dest: pathlib.Path) -> None:
@@ -144,22 +137,18 @@ def clone_or_update_repository(url: str, path: str | pathlib.Path) -> None:
         repo = Repository(path)
         print(f"Repository already exists at {path}")
 
-        # Try to fetch and update from remote
         try:
             if repo.remotes:
                 remote = repo.remotes[0]
                 print(f"Fetching latest changes from {remote.name}...")
                 remote.fetch()
 
-                # Get the default branch
                 if not repo.head_is_unborn:
                     branch_name = repo.head.shorthand
                     remote_branch = f"{remote.name}/{branch_name}"
 
-                    # Check if remote branch exists and update to it
                     try:
                         repo.references[f"refs/remotes/{remote_branch}"]
-                        # Update working directory to match remote (discards local changes)
                         repo.checkout(
                             f"refs/remotes/{remote_branch}",
                             strategy=GIT_CHECKOUT_FORCE | GIT_CHECKOUT_RECREATE_MISSING,
@@ -216,7 +205,6 @@ def install_klayout_package() -> None:
     """
     cwd = pathlib.Path(__file__).resolve().parent
 
-    # install layermap
     _install_to_klayout(
         src=cwd / "generic_tech" / "klayout",
         klayout_subdir_name="salt",
@@ -226,13 +214,11 @@ def install_klayout_package() -> None:
     klayout_folder = "KLayout" if sys.platform == "win32" else ".klayout"
     subdir = home / klayout_folder / "salt"
 
-    # install metainfo-ports
     clone_or_update_repository(
         "https://github.com/gdsfactory/metainfo-ports.git",
         subdir / "metainfo-ports",
     )
 
-    # install klive
     clone_or_update_repository(
         "https://github.com/gdsfactory/klive.git", subdir / "klive"
     )
@@ -241,12 +227,7 @@ def install_klayout_package() -> None:
 def install_klayout_technology(
     tech_dir: pathlib.Path, tech_name: str | None = None
 ) -> None:
-    """Install technology to KLayout."""
-    _install_to_klayout(
-        src=tech_dir,
-        klayout_subdir_name="tech",
-        package_name=tech_name or tech_dir.name,
-    )
+    pass
 
 
 py_files = list(PATH.notebooks.glob("**/*.py"))
@@ -256,12 +237,4 @@ def convert_py_to_ipynb(
     files: list[pathlib.Path] = py_files,
     output_folder: pathlib.Path = PATH.cwd / "notebooks",
 ) -> None:
-    """Convert notebooks from markdown to ipynb."""
-    import jupytext
-
-    output_folder.mkdir(exist_ok=True, parents=True)
-
-    for file in files:
-        notebook_file = f"{output_folder}/{file.stem}.ipynb"
-        nb = jupytext.read(file)
-        jupytext.write(nb, notebook_file)
+    pass

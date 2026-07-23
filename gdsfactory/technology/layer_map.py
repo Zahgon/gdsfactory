@@ -5,7 +5,6 @@ from gdsfactory.technology.layer_views import LayerViews
 
 
 class LayerMap(gf.LayerEnum):
-    """You will need to create a new LayerMap with your specific foundry layers."""
 
     layout = gf.constant(gf.kcl.layout)
 

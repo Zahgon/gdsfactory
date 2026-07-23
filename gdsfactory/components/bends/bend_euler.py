@@ -158,52 +158,7 @@ def bend_euler_s(
     port1: str = "o1",
     port2: str = "o2",
 ) -> Component:
-    r"""Sbend made of 2 euler bends.
-
-    Args:
-        radius: in um. Defaults to cross_section_radius.
-        p: Proportion of the curve that is an Euler curve.
-        with_arc_floorplan: If False: `radius` is the minimum radius of curvature.
-        npoints: Number of points used per 360 degrees.
-        angular_step: if not None, the angle step in degrees for the all_angle bend.
-        layer: layer to use. Defaults to cross_section.layer.
-        width: width to use. Defaults to cross_section.width.
-        cross_section: specification (CrossSection, string, CrossSectionFactory dict).
-        allow_min_radius_violation: if True allows radius to be smaller than cross_section radius.
-        port1: input port name.
-        port2: output port name.
-
-                        _____ o2
-                       /
-                      /
-                     /
-                    /
-                    |
-                   /
-                  /
-                 /
-         o1_____/
-
-    """
-    c = Component()
-    b = bend_euler(
-        radius=radius,
-        p=p,
-        with_arc_floorplan=with_arc_floorplan,
-        npoints=npoints,
-        layer=layer,
-        width=width,
-        cross_section=cross_section,
-        allow_min_radius_violation=allow_min_radius_violation,
-        angular_step=angular_step,
-    )
-    b1 = c.add_ref(b)
-    b2 = c.add_ref(b)
-    b2.connect(port1, b1[port2], mirror=True)
-    c.add_port(port1, port=b1[port1])
-    c.add_port(port2, port=b2[port2])
-    c.info["length"] = 2 * b.info["length"]
-    return c
+    pass
 
 
 @gf.cell_with_module_name(schematic_function=bend_schematic, tags=["bends"])

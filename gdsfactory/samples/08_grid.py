@@ -1,4 +1,3 @@
-"""Group components in a cell using grid."""
 
 if __name__ == "__main__":
     import gdsfactory as gf

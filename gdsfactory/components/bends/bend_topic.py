@@ -234,49 +234,7 @@ def bend_topic_s(
     port1: str = "o1",
     port2: str = "o2",
 ) -> Component:
-    r"""Sbend made of 2 topic bends.
-
-    Args:
-        radius: radius at the start and end of bend.
-        p: used to calculate the angle of the bend at the end of TOP / start of circular arc, as p*angle. It should be within [0, 0.5).
-        npoints: Number of points used per 360 degrees.
-        cross_section: specification (CrossSection, string, CrossSectionFactory dict).
-        allow_min_radius_violation: if True allows radius to be smaller than cross_section radius.
-        layer: layer to use. Defaults to cross_section.layer.
-        width: width to use. Defaults to cross_section.width.
-        port1: input port name.
-        port2: output port name.
-
-                        _____ o2
-                       /
-                      /
-                     /
-                    /
-                    |
-                   /
-                  /
-                 /
-         o1_____/
-
-    """
-    c = Component()
-    b = bend_topic(
-        radius=radius,
-        angle=90,
-        p=p,
-        npoints=npoints,
-        layer=layer,
-        width=width,
-        allow_min_radius_violation=allow_min_radius_violation,
-        cross_section=cross_section,
-    )
-    b1 = c.add_ref(b)
-    b2 = c.add_ref(b)
-    b2.connect(port1, b1[port2], mirror=True)
-    c.add_port(port1, port=b1[port1])
-    c.add_port(port2, port=b2[port2])
-    c.info["length"] = 2 * b.info["length"]
-    return c
+    pass
 
 
 bend_topic180 = partial(bend_topic, angle=180)

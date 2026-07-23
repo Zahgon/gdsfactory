@@ -15,25 +15,4 @@ def litho_ruler(
     num_marks: int = 21,
     layer: LayerSpec = "WG",
 ) -> gf.Component:
-    """Ruler structure for lithographic measurement.
-
-    Includes marks of varying scales to allow for easy reading by eye.
-
-    based on phidl.geometry
-
-    Args:
-        height: Height of the ruling marks in um.
-        width: Width of the ruling marks in um.
-        spacing: Center-to-center spacing of the ruling marks in um.
-        scale: Height scale pattern of marks.
-        num_marks: Total number of marks to generate.
-        layer: Specific layer to put the ruler geometry on.
-    """
-    pitch = spacing + width
-    c = gf.Component()
-    for n in range(num_marks):
-        h = height * scale[n % len(scale)]
-        ref = c << gf.components.rectangle(size=(width, h), layer=layer)
-        ref.movex((n - num_marks / 2) * pitch + spacing / 2.0)
-
-    return c
+    pass

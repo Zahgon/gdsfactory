@@ -1,4 +1,3 @@
-"""You can route all component optical ports to a fiber array."""
 
 from __future__ import annotations
 
@@ -10,15 +9,11 @@ gf.gpdk.PDK.activate()
 
 @gf.cell
 def big_device_with_gratings() -> gf.Component:
-    component = big_device(nports=10)
-    radius = 5.0
-    return gf.routing.add_fiber_array(
-        component=component, radius=radius, fanout_length=50.0, radius_loopback=10
-    )
+    pass
 
 
 def test_big_device() -> None:
-    assert big_device_with_gratings()
+    pass
 
 
 if __name__ == "__main__":

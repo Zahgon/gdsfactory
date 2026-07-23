@@ -1,4 +1,3 @@
-"""Route bundle connecting top and bottom ports vertically."""
 
 from __future__ import annotations
 

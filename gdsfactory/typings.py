@@ -1,23 +1,3 @@
-"""In programming, a factory is a function that returns an object.
-
-Functions are easy to understand because they have clear inputs and outputs.
-Most gdsfactory functions take some inputs and return a Component object.
-Some of these inputs parameters are also functions.
-
-- Component: Object with.
-    - name.
-    - references: to other components (x, y, rotation).
-    - polygons in different layers.
-    - ports dict.
-
-
-Specs:
-
-- ComponentSpec: Component, function, string or dict
-    (component=mzi, settings=dict(delta_length=20)).
-- LayerSpec: (3, 0), 3 (assumes 0 as datatype) or string.
-
-"""
 
 from __future__ import annotations
 
@@ -57,18 +37,6 @@ STEP_DIRECTIVES_ALL_ANGLE = {
 
 
 class Step(TypedDict, total=False):
-    """Manhattan Step.
-
-    Parameters:
-        x: set the absolute x coordinate of the next waypoint.
-        y: set the absolute y coordinate of the next waypoint.
-        dx: relative x-displacement from the current position.
-        dy: relative y-displacement from the current position.
-
-    You can combine absolute and relative in a single step, e.g. {"x": 100, "dy": 20}
-    sets x to 100 and shifts y by 20 from the current position.
-
-    """
 
     x: float
     y: float
@@ -77,17 +45,6 @@ class Step(TypedDict, total=False):
 
 
 class PixelBufferOptions(TypedDict, total=False):
-    """Options for KLayout's get_pixels_with_options method.
-
-    Parameters:
-        width: The width of the image to render in pixels.
-        height: The height of the image to render in pixels.
-        linewidth: The width of a line in pixels (usually 1) or 0 for default.
-        oversampling: The oversampling factor (1..3) or 0 for default.
-        resolution: The resolution (pixel size compared to a screen pixel size, i.e 1/oversampling) or 0 for default.
-        target_box: The box to draw or an empty box for default (DBox).
-
-    """
 
     width: int
     height: int
@@ -244,7 +201,6 @@ type LayerTransitions = dict[
 
 
 class TypedArray(np.ndarray[Any, np.dtype[Any]]):
-    """based on https://github.com/samuelcolvin/pydantic/issues/380."""
 
     @classmethod
     def __get_validators__(
@@ -254,7 +210,7 @@ class TypedArray(np.ndarray[Any, np.dtype[Any]]):
 
     @classmethod
     def validate_type(cls, val: Any, _info: Any) -> npt.NDArray[np.float64]:
-        return np.array(val, dtype=cls.inner_type)  # type: ignore[attr-defined]
+        pass
 
 
 class ArrayMeta(type):

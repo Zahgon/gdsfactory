@@ -25,111 +25,17 @@ def triangle(
     ybot: float = 0,
     layer: LayerSpec = "WG",
 ) -> Component:
-    r"""Return triangle.
-
-    Args:
-        x: base xsize.
-        xtop: top xsize.
-        y: ysize.
-        ybot: bottom ysize.
-        layer: layer.
-
-        xtop
-           _
-          | \
-          |  \
-          |   \
-         y|    \
-          |     \
-          |      \
-          |______|ybot
-              x
-    """
-    c = Component()
-    points = [(0, 0), (x, 0), (x, ybot), (xtop, y), (0, y)]
-    c.add_polygon(points, layer=layer)
-    return c
+    pass
 
 
 @gf.cell_with_module_name(tags=["shapes"])
 def triangle2(spacing: float = 3, **kwargs: Any) -> Component:
-    r"""Return 2 triangles (bot, top).
-
-    Args:
-        spacing: between top and bottom.
-        kwargs: triangle arguments.
-
-    Keyword Args:
-        x: base xsize.
-        xtop: top xsize.
-        y: ysize.
-        ybot: bottom ysize.
-        layer: layer.
-
-          _
-         | \
-         |  \
-         |   \
-         |    \
-         |     \
-         |      \
-         |       \
-         |       |  spacing
-         |      /
-         |     /
-         |    /
-         |   /
-         |  /
-         |_/
-
-    """
-    c = Component()
-    t = triangle(**kwargs)
-    tt = c << t
-    tb = c << t
-    tb.dmirror()
-    tb.rotate(180)
-    tb.ymax = tt.ymin - spacing
-    return c
+    pass
 
 
 @gf.cell_with_module_name(tags=["shapes"])
 def triangle4(**kwargs: Any) -> Component:
-    r"""Return 4 triangles.
-
-    Args:
-        kwargs: triangle arguments.
-
-    Keyword Args:
-        x: base xsize.
-        xtop: top xsize.
-        y: ysize.
-        ybot: bottom ysize.
-        layer: layer.
-
-                  / | \
-                 /  |  \
-                /   |   \
-               /    |    \
-              /     |     \
-             /      |      \
-            /       |       \
-            |       |       |
-            \       |      /
-             \      |     /
-              \     |    /
-               \    |   /
-                \   |  /
-                 \  |_/
-
-    """
-    c = Component()
-    t = triangle2(**kwargs)
-    t1 = c << t
-    t2 = c << t
-    t2.dmirror()
-    t2.xmax = t1.xmin
-    return c
+    pass
 
 
 triangle_thin = partial(triangle, xtop=0.2, x=2, y=5)

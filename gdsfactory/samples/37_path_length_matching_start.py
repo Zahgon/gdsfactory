@@ -1,12 +1,3 @@
-"""Sample path length matching with loops at the start.
-
-PathLengthConfig parameters:
-- element: which route (by index) to use as the reference length. All other
-  routes will be extended to match. Use 0 for the first, -1 for the last.
-- loop_side: which side of the route the delay loops appear on (left, right, center).
-- loops: number of delay loops to insert.
-- loop_position: where along the route to place the loops (start, center, end).
-"""
 
 from __future__ import annotations
 

@@ -1,4 +1,3 @@
-"""snaps values and coordinates to the GDS grid in nm."""
 
 from __future__ import annotations
 
@@ -20,14 +19,11 @@ def is_on_grid(
     nm: int | None = None,
     grid_factor: int = 1,
 ) -> bool:
-    return np.array_equal(
-        snap_to_grid(x, grid_factor=grid_factor, nm=nm), np.round(x, 6)
-    )
+    pass
 
 
 def warn_if_not_on_grid(x: Value) -> None:
-    if not is_on_grid(x):
-        warnings.warn(f"{x} is not on grid", stacklevel=3)
+    pass
 
 
 def assert_on_grid(
@@ -35,9 +31,7 @@ def assert_on_grid(
     nm: int | None = None,
     grid_factor: int = 1,
 ) -> None:
-    x_grid = snap_to_grid(x, nm=nm, grid_factor=grid_factor)
-    if not np.isclose(x_grid, x, rtol=0).all():
-        raise ValueError(f"{x} needs to be on 1nm grid and should be {x_grid}")
+    pass
 
 
 assert_on_1nm_grid = partial(assert_on_grid, nm=1)
@@ -85,7 +79,6 @@ def snap_to_grid[T: npt.NDArray[np.floating[Any]]](
     """
     grid_um = (nm / 1000 if nm is not None else gf.kcl.dbu) * grid_factor
 
-    # Round half up
     res = grid_um * np.floor(np.asarray(x, dtype=np.float64) / grid_um + 0.5)
 
     if np.ndim(res) == 0:
